@@ -26,7 +26,7 @@ class User:
         self.password = password
         self.email = email
         self.full_name = full_name
-        self._projects = projects
+        self.projects = projects
         self.tasks = tasks
         self._permissions = permissions
 
@@ -37,7 +37,3 @@ class User:
     @property
     def permissions(self) -> Permissions:
         return Permissions(self._permissions)
-
-    @property
-    def projects(self) -> List[str]:
-        return [ULID.from_str(project) for project in self._projects]

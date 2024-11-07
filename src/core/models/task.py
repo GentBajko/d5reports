@@ -27,7 +27,7 @@ class Task:
         self.title = title
         self.hours_required = hours_required
         self.description = description
-        self._logs = logs
+        self.logs = logs
         self._status = status
 
     @property
@@ -41,11 +41,3 @@ class Task:
     @property
     def status(self) -> str:
         return TaskStatus(self._status)
-
-    @property
-    def logs(self) -> List[str]:
-        return [ULID.from_str(log) for log in self._logs]
-
-    @property
-    def status_str(self) -> str:
-        return ULID.from_str(self._status)

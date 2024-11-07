@@ -20,18 +20,10 @@ class Project:
         self._id = id
         self.name = name
         self.email = email
-        self._developers = developers
-        self._tasks = tasks
+        self.developers = developers
+        self.tasks = tasks
         self.send_email = send_email
 
     @property
     def id(self) -> str:
         return ULID.from_str(self._id)
-
-    @property
-    def developers(self) -> List[str]:
-        return [ULID.from_str(developer) for developer in self._developers]
-
-    @property
-    def tasks(self) -> List[str]:
-        return [ULID.from_str(task) for task in self._tasks]
