@@ -13,18 +13,16 @@ class User:
     def __init__(
         self,
         id: str,
-        username: str,
-        password: str,
         email: str,
+        password: str,
         full_name: str,
         projects: List["Project"],
         tasks: List["Task"],
         permissions: int,
     ):
         self._id = id
-        self.username = username
-        self.password = password
         self.email = email
+        self.password = password
         self.full_name = full_name
         self.projects = projects
         self.tasks = tasks
