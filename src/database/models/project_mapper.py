@@ -12,6 +12,7 @@ project_table = Table(
     Column("name", String(100), nullable=False),
     Column("email", String(50), nullable=False),
     Column("send_email", Boolean, default=False),
+    Column("archived", Boolean, default=False),
 )
 
 mapper_registry.map_imperatively(
