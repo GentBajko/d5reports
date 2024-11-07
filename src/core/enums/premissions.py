@@ -2,6 +2,7 @@ from enum import Flag, auto
 
 
 class Permissions(Flag):
+    NO_LONGER_EMPLOYED = 0
     MANAGE_USERS = auto()
     VIEW_ALL_PROJECTS = auto()
     VIEW_ALL_TASKS = auto()
