@@ -1,8 +1,12 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from ulid import ULID
 
 from core.enums.premissions import Permissions
+
+if TYPE_CHECKING:
+    from core.models.task import Task
+    from core.models.project import Project
 
 
 class User:
@@ -13,8 +17,8 @@ class User:
         password: str,
         email: str,
         full_name: str,
-        projects: List[str],
-        tasks: List[str],
+        projects: List["Project"],
+        tasks: List["Task"],
         permissions: int,
     ):
         self._id = id

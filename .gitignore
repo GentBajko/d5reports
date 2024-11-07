@@ -13,3 +13,4 @@ venv/
 .env
 
 .VSCodeCounter
+.pytest_cache
