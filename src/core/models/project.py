@@ -16,6 +16,7 @@ class Project:
         developers: List["User"],
         tasks: List["Task"],
         send_email: bool,
+        archived: bool,
     ):
         self.id = id
         self.name = name
@@ -23,6 +24,7 @@ class Project:
         self.developers = developers
         self.tasks = tasks
         self.send_email = send_email
+        self.archived = archived
 
     @property
     def _id(self) -> ULID:
