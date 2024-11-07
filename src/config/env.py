@@ -18,6 +18,6 @@ class EnvironmentConfig(BaseSettings):
         env_file_encoding = "utf-8"
 
 
-CONFIG = EnvironmentConfig()
+ENV = EnvironmentConfig()
 
-__all__ = ["CONFIG", "EnvironmentConfig"]
+__all__ = ["ENV", "EnvironmentConfig"]
