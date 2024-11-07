@@ -14,3 +14,4 @@ venv/
 
 .VSCodeCounter
 .pytest_cache
+*.ipynb

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from ulid import ULID
 
-from core.enums.task_status import TaskStatus
+from src.core.enums.task_status import TaskStatus
 
 
 class TaskLog:
@@ -16,22 +16,22 @@ class TaskLog:
         hours_spent_today: int,
         task_status: str,
     ):
-        self._timestamp = timestamp
-        self._task_id = task_id
+        self.timestamp = datetime.fromtimestamp(timestamp)
+        self.task_id = ULID.from_str(task_id)
         self.task_name = task_name
         self.description = description
         self.user_id = user_id
         self.time_spent_today = hours_spent_today
-        self._task_status = task_status
+        self.task_status = TaskStatus(task_status)
 
     @property
-    def timestamp(self) -> datetime:
-        return datetime.fromtimestamp(self._timestamp)
+    def _timestamp(self) -> float:
+        return self.timestamp.timestamp()
 
     @property
-    def task_status(self) -> TaskStatus:
-        return TaskStatus(self._task_status)
+    def _task_id(self) -> str:
+        return str(self.task_id)
 
     @property
-    def task_id(self) -> ULID:
-        return ULID.from_str(self._task_id)
+    def _task_status(self) -> str:
+        return self.task_status.value

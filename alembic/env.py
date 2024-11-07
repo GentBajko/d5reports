@@ -1,13 +1,13 @@
 from alembic import context
-from database.models.mapper import mapper_registry
-from src.database.adapters.mysql import MySQL
-from src.database.models.task_mapper import Task  # noqa
-from src.database.models.user_mapper import User  # noqa
-from src.database.models.project_mapper import Project  # noqa
-from src.database.models.task_log_mapper import TaskLog  # noqa
-from src.database.models.association_tables import (
-    project_developers_table,  # noqa
+from src.database.models import (
+    Task,  # noqa: F401
+    User,  # noqa: F401
+    Project,  # noqa: F401
+    TaskLog,  # noqa: F401
+    project_developers_table,  # noqa: F401
 )
+from src.database.models.mapper import mapper_registry
+from src.database.adapters.mysql import MySQL
 
 target_metadata = mapper_registry.metadata
 

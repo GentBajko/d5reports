@@ -2,9 +2,10 @@ from typing import TYPE_CHECKING, List
 
 from ulid import ULID
 
-from core.enums.task_status import TaskStatus
+from src.core.enums.task_status import TaskStatus
+
 if TYPE_CHECKING:
-    from core.models.task_log import TaskLog
+    from src.core.models.task_log import TaskLog
 
 
 class Task:
@@ -20,24 +21,24 @@ class Task:
         logs: List["TaskLog"],
         status: str,
     ):
-        self._id = id
-        self._project_id = project_id
+        self.id = ULID.from_str(id)
+        self.project_id = ULID.from_str(project_id)
         self.project_name = project_name
         self.user_id = user_id
         self.title = title
         self.hours_required = hours_required
         self.description = description
         self.logs = logs
-        self._status = status
+        self.status = TaskStatus(status)
 
     @property
-    def id(self) -> str:
-        return ULID.from_str(self._id)
+    def _id(self) -> str:
+        return str(self.id)
 
     @property
-    def project_id(self) -> str:
-        return ULID.from_str(self._project_id)
+    def _project_id(self) -> str:
+        return str(self.project_id)
 
     @property
-    def status(self) -> str:
-        return TaskStatus(self._status)
+    def _status(self) -> str:
+        return self.status.value

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List
 from ulid import ULID
 
 if TYPE_CHECKING:
-    from core.models.task import Task
-    from core.models.user import User
+    from src.core.models.task import Task
+    from src.core.models.user import User
 
 
 class Project:
@@ -17,7 +17,7 @@ class Project:
         tasks: List["Task"],
         send_email: bool,
     ):
-        self._id = id
+        self.id = ULID.from_str(id)
         self.name = name
         self.email = email
         self.developers = developers
@@ -25,5 +25,5 @@ class Project:
         self.send_email = send_email
 
     @property
-    def id(self) -> str:
-        return ULID.from_str(self._id)
+    def _id(self) -> str:
+        return str(self.id)

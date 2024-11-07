@@ -1,18 +1,18 @@
-from sqlalchemy import Table, Column, String, Integer
+from sqlalchemy import Table, Column, String, BigInteger
 from sqlalchemy.orm import relationship
 
-from core.models.user import User
-from database.models.mapper import mapper_registry
-from database.models.association_tables import project_developers_table
+from src.core.models.user import User
+from src.database.models.mapper import mapper_registry
+from src.database.models.association_tables import project_developers_table
 
 user_table = Table(
     "user",
     mapper_registry.metadata,
-    Column("id", String, primary_key=True),
+    Column("id", String(26), primary_key=True),
     Column("email", String(50)),
     Column("password", String(150)),
     Column("full_name", String(50)),
-    Column("permissions", Integer),
+    Column("permissions", BigInteger),
 )
 
 
