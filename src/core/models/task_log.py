@@ -16,22 +16,22 @@ class TaskLog:
         hours_spent_today: int,
         task_status: str,
     ):
-        self.timestamp = datetime.fromtimestamp(timestamp)
-        self.task_id = ULID.from_str(task_id)
+        self.timestamp = timestamp
+        self.task_id = task_id
         self.task_name = task_name
         self.description = description
         self.user_id = user_id
         self.time_spent_today = hours_spent_today
-        self.task_status = TaskStatus(task_status)
+        self.task_status = task_status
 
     @property
-    def _timestamp(self) -> float:
-        return self.timestamp.timestamp()
+    def _timestamp(self) -> datetime:
+        return datetime.fromtimestamp(self.timestamp)
 
     @property
-    def _task_id(self) -> str:
-        return str(self.task_id)
+    def _task_id(self) -> ULID:
+        return ULID.from_str(self.task_id)
 
     @property
-    def _task_status(self) -> str:
-        return self.task_status.value
+    def _task_status(self) -> TaskStatus:
+        return TaskStatus(self.task_status)

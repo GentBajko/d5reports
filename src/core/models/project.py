@@ -17,7 +17,7 @@ class Project:
         tasks: List["Task"],
         send_email: bool,
     ):
-        self.id = ULID.from_str(id)
+        self.id = id
         self.name = name
         self.email = email
         self.developers = developers
@@ -25,5 +25,5 @@ class Project:
         self.send_email = send_email
 
     @property
-    def _id(self) -> str:
-        return str(self.id)
+    def _id(self) -> ULID:
+        return ULID.from_str(id)

@@ -20,18 +20,18 @@ class User:
         tasks: List["Task"],
         permissions: int,
     ):
-        self.id = ULID.from_str(id)
+        self.id = id
         self.email = email
         self.password = password
         self.full_name = full_name
         self.projects = projects
         self.tasks = tasks
-        self.permissions = Permissions(permissions)
+        self.permissions = permissions
 
     @property
-    def _id(self) -> str:
-        return str(self.id)
+    def _id(self) -> ULID:
+        return ULID.from_str(self.id)
 
     @property
-    def _permissions(self) -> int:
-        return self.permissions.value
+    def _permissions(self) -> Permissions:
+        return Permissions(self.permissions)

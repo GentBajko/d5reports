@@ -16,5 +16,6 @@ class MySQL:
 
     Session = sessionmaker(bind=engine)
 
-    def session(self):
-        return self.Session()
+    @classmethod
+    def session(cls):
+        return cls.Session()
