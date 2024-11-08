@@ -1,7 +1,12 @@
-from typing import Protocol
+from typing import Type, Protocol
 
 
 class IRepository(Protocol):
+    @property
+    def model(self) -> Type[object]:
+        """Returns the model class associated with the repository."""
+        ...
+
     def create(self, *args, **kwargs):
         """Creates a new record in the database."""
         ...
