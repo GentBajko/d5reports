@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from ulid import ULID
 
@@ -10,15 +10,15 @@ if TYPE_CHECKING:
 class Project:
     def __init__(
         self,
-        id: str,
         name: str,
         email: str,
-        developers: List["User"],
-        tasks: List["Task"],
         send_email: bool,
         archived: bool,
+        id: Optional[str] = None,
+        developers: Optional[List["User"]] = None,
+        tasks: Optional[List["Task"]] = None,
     ):
-        self.id = id
+        self.id = id or str(ULID())
         self.name = name
         self.email = email
         self.developers = developers
@@ -29,3 +29,43 @@ class Project:
     @property
     def _id(self) -> ULID:
         return ULID.from_str(id)
+
+    def to_dict(self, visited=None):
+        if visited is None:
+            visited = set()
+
+        if id(self) in visited:
+            return {"id": self.id}
+
+        visited.add(id(self))
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "send_email": self.send_email,
+            "archived": self.archived,
+            "developers": [
+                developer.to_dict(visited) for developer in self.developers
+            ]
+            if self.developers
+            else [],
+            "tasks": [task.to_dict(visited) for task in self.tasks]
+            if self.tasks
+            else [],
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            email=data["email"],
+            send_email=data["send_email"],
+            archived=data["archived"],
+            developers=[
+                User.from_dict(developer)
+                for developer in data.get("developers", [])
+            ],
+            tasks=[Task.from_dict(task) for task in data.get("tasks", [])],
+        )

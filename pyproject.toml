@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.115.4",
     "jinja2>=3.1.4",
     "loguru>=0.7.2",
+    "pydantic[dotenv,email]>=2.9.2",
     "pymysql>=1.1.1",
     "python-dotenv>=1.0.1",
     "python-ulid>=3.0.0",

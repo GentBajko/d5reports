@@ -1,6 +1,6 @@
 from typing import Any, List, Type, Generic, TypeVar, Optional
 
-from database.interfaces.session import ISession
+from src.database.interfaces.session import ISession
 
 T = TypeVar("T")
 
