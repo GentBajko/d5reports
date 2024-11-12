@@ -3,7 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from starlette.responses import JSONResponse
 
-from database.adapters.mysql import MySQL
+from src.database.adapters.mysql import MySQL
 
 healthcheck_router = APIRouter(tags=["Health Check"])
 

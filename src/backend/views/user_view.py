@@ -33,11 +33,15 @@ def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
         full_name=user.full_name,
         password=user.password,
         permissions=user.permissions,
+        projects=[],
+        tasks=[],
     )
     with session as s:
         repository = Repository(s, User)
-        repository.create(new_user)
-    return UserResponseModel.model_validate(new_user)
+        created_user = repository.create(new_user)
+
+        user_data = created_user.to_dict()
+    return UserResponseModel.model_validate(user_data)
 
 
 def get_user(session: ISession, **kwargs) -> UserResponseModel:
@@ -64,7 +68,6 @@ def get_user(session: ISession, **kwargs) -> UserResponseModel:
         repository = Repository(s, User)
         user = repository.query(**kwargs)[0]
         user_dict = user.to_dict()
-    user_dict = user.to_dict()
 
     for project in user_dict.get("projects", []):
         if isinstance(project, dict):

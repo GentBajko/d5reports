@@ -2,8 +2,6 @@ from typing import List, Optional
 
 from pydantic import Field, EmailStr, BaseModel
 
-from src.core.enums.premissions import Permissions
-
 
 class TaskLogModel(BaseModel):
     timestamp: int
@@ -68,13 +66,13 @@ class UserCreateModel(BaseModel):
     email: EmailStr
     password: str
     full_name: str
-    permissions: int = Permissions.DEVELOPER.value
+    permissions: int
 
 
 class UserResponseModel(BaseModel):
     id: str
     email: EmailStr
     full_name: str
-    tasks: List[TaskResponseModel]
-    permissions: int = Permissions.DEVELOPER.value
+    permissions: int
+    tasks: Optional[List[TaskResponseModel]] = Field(default=None)
     projects: Optional[List[ProjectResponseModel]] = Field(default=None)

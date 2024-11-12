@@ -1,6 +1,10 @@
-def main():
-    print("Hello from d5reports!")
-
+import uvicorn
+from src.config.env import ENV
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(
+        "src.backend.server:app",
+        host=ENV.API_HOST,
+        port=ENV.API_PORT,
+        reload=ENV.ENV == "dev",
+    )

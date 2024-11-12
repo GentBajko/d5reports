@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 
 from src.config.env import ENV
-from backend.controllers.user_controller import user_router
+from src.backend.controllers.user_controller import user_router
 from src.backend.controllers.healthcheck_controller import healthcheck_router
 
 app = FastAPI(title="Divison5 Reports API", version="0.1.0")
@@ -31,4 +31,4 @@ async def log_request(request: Request, call_next: Callable):
 
 
 app.include_router(healthcheck_router, tags=["Health Check"])
-app.include_router(user_router, prefix="/v1", tags=["Auth"])
+app.include_router(user_router, prefix="/v1", tags=["User"])
