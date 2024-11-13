@@ -46,7 +46,7 @@ async def create_user_endpoint(
 
 @user_router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse("user_login.html", {"request": request})
+    return templates.TemplateResponse("user/login.html", {"request": request})
 
 
 @user_router.post("/login")
@@ -80,13 +80,9 @@ def get_user_endpoint(
     user = get_user(session, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    template_name = (
-        "user_detail_htmx.html"
-        if request.headers.get("HX-Request")
-        else "user_detail.html"
-    )
+
     return templates.TemplateResponse(
-        template_name, {"request": request, "user": user}
+        "user/detail.html", {"request": request, "user": user}
     )
 
 
@@ -114,5 +110,5 @@ def get_all_users_endpoint(
 ):
     users = get_all_users(session)
     return templates.TemplateResponse(
-        "users.html", {"request": request, "users": users}
+        "user/users.html", {"request": request, "users": users}
     )
