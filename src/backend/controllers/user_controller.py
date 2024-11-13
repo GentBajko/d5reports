@@ -70,7 +70,7 @@ async def logout(
     csrf_protect=Depends(validate_csrf),
 ):
     request.session.clear()
-    return RedirectResponse(url="/user_login", status_code=302)
+    return RedirectResponse(url="/user/login", status_code=302)
 
 
 @user_router.get("/{user_id}", response_class=HTMLResponse)

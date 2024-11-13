@@ -209,17 +209,16 @@ def get_all_users(session: ISession) -> List[UserResponseModel]:
         users = repository.query()
         user_dicts = [user.to_dict() for user in users]
 
+    output = []
     for user_dict in user_dicts:
         for project in user_dict.get("projects", []):
             if isinstance(project, dict):
                 for developer in project.get("developers", []):
                     if isinstance(developer, dict):
                         developer.setdefault("email", user_dict.get("email"))
-                        developer.setdefault(
-                            "full_name", user_dict.get("full_name")
-                        )
+                        developer.setdefault("full_name", user_dict.get("full_name"))
                         developer.setdefault("tasks", project.get("tasks", []))
+                        developer.setdefault("permissions", user_dict.get("permissions"))
+        output.append(UserResponseModel.model_validate(user_dict))
+    return output
 
-    return [
-        UserResponseModel.model_validate(user_dict) for user_dict in user_dicts
-    ]

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Task Reporting Site{% endblock %}</title>
+    <title>{% block title %}D5 Reports{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.2"></script>
     <script>
@@ -12,16 +12,37 @@
 </head>
 <body class="bg-gray-100">
     <div class="flex">
-        <div class="w-64 bg-white shadow-md h-screen">
+        <div class="w-64 bg-[#002F41] shadow-md h-screen">
             <div class="p-4 border-b">
-                <h2 class="text-2xl font-semibold text-gray-800">Division5 Reports</h2>
+                <h2 class="text-2xl font-semibold text-[#71c9ed]">
+                    <a href="/" class="text-[#71c9ed]">Division5 Reports</a>
+                </h2>
             </div>
             <!-- Sidebar content -->
             {% if request.session.get('user_id') %}
             <div class="p-4">
+                <form method="get" action="/">
+                    <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+                    <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out after:bg-[#5669CC] after:transition after:duration-200 after:ease-in-out">Dashboard</button>
+                </form>
+            </div>
+            <div class="p-4">
                 <form method="post" action="/user/logout">
                     <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
-                    <button type="submit" class="text-blue-500 hover:underline">Logout</button>
+                    <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out after:bg-[#5669CC] after:transition after:duration-200 after:ease-in-out">Logout</button>
+                </form>
+            </div>
+            {% else %}
+
+            <div class="p-4">
+                <form method="get" action="/user/login">
+                    <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+                    <button
+                    type="submit"
+                    class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out after:bg-[#5669CC] after:transition after:duration-200 after:ease-in-out"
+                    >
+                    Login
+                </button>
                 </form>
             </div>
             {% endif %}
