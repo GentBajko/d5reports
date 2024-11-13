@@ -1,29 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}All Users{% endblock %}
+{% block title %}Users{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">All Users</h1>
-<table class="min-w-full bg-white">
-    <thead class="bg-gray-200">
-        <tr>
-            <th class="py-2 px-4 border-b">ID</th>
-            <th class="py-2 px-4 border-b">Name</th>
-            <th class="py-2 px-4 border-b">Email</th>
-            <th class="py-2 px-4 border-b">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr class="hover:bg-gray-100">
-            <td class="py-2 px-4 border-b">{{ user.id }}</td>
-            <td class="py-2 px-4 border-b">{{ user.name }}</td>
-            <td class="py-2 px-4 border-b">{{ user.email }}</td>
-            <td class="py-2 px-4 border-b">
-                <a href="/user/{{ user.id }}" class="text-blue-500 hover:underline">View</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="max-w-4xl mx-auto bg-white p-8 shadow-md">
+    <h1 class="text-2xl mb-4">Users</h1>
+    <table class="w-full table-auto">
+        <thead>
+            <tr>
+                <th class="border px-4 py-2">Email</th>
+                <th class="border px-4 py-2">Full Name</th>
+                <th class="border px-4 py-2">Permissions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td class="border px-4 py-2">{{ user.email }}</td>
+                <td class="border px-4 py-2">{{ user.full_name }}</td>
+                <td class="border px-4 py-2">{{ user.permissions }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

@@ -1,6 +1,5 @@
-from typing import List
+from typing import List, Optional
 
-from src.backend.utils.populate_fields import populate_developer_fields
 from src.backend.models import (
     UserCreateModel,
     UserResponseModel,
@@ -9,7 +8,10 @@ from src.backend.models import (
 from src.database.models import user_mapper  # noqa F401
 from src.core.models.user import User
 from src.database.interfaces.session import ISession
+from src.backend.utils.populate_fields import populate_developer_fields
 from src.database.repositories.repository import Repository
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 
 def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
@@ -28,10 +30,12 @@ def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
         UserResponseModel: A validated response model representing the newly created user.
     """
     UserResponseModel.model_rebuild()
+    ph = PasswordHasher()
+    hashed_password = ph.hash(user.password)
     new_user = User(
         email=user.email,
         full_name=user.full_name,
-        password=user.password,
+        password=hashed_password,
         permissions=user.permissions,
         projects=[],
         tasks=[],
@@ -39,9 +43,25 @@ def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
     with session as s:
         repository = Repository(s, User)
         created_user = repository.create(new_user)
-
         user_data = created_user.to_dict()
     return UserResponseModel.model_validate(user_data)
+
+
+def authenticate_user(
+    email: str, password: str, session: ISession
+) -> Optional[User]:
+    with session as s:
+        repository = Repository(s, User)
+        users = repository.query(email=email)
+        if not users:
+            return None
+        user = users[0]
+        ph = PasswordHasher()
+        try:
+            ph.verify(user.password, password)
+            return user
+        except VerifyMismatchError:
+            return None
 
 
 def get_user(session: ISession, **kwargs) -> UserResponseModel:
@@ -107,18 +127,22 @@ def update_user(
     with session as s:
         repository = Repository(s, User)
         existing_user = repository.get(user_id)
+
         if not existing_user:
             raise ValueError(f"User with id {user_id} does not exist.")
 
-        for key, value in user_update.model_dump(exclude_unset=True).items():
+        user_data = user_update.model_dump(exclude_unset=True)
+
+        if "password" in user_data:
+            ph = PasswordHasher()
+            user_data["password"] = ph.hash(user_data["password"])
+
+        for key, value in user_data.items():
             setattr(existing_user, key, value)
 
         repository.update(existing_user)
-
         user_dict = existing_user.to_dict()
-
         populate_developer_fields(user_dict)
-
     return UserResponseModel.model_validate(user_dict)
 
 

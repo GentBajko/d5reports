@@ -4,30 +4,33 @@
     <meta charset="UTF-8">
     <title>{% block title %}Task Reporting Site{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <script>
+        htmx.config.csrfHeaderName = "X-CSRFToken";
+        htmx.config.csrfToken = "{{ request.session.get('csrftoken', '') }}";
+    </script>
 </head>
 <body class="bg-gray-100">
-
     <div class="flex">
         <div class="w-64 bg-white shadow-md h-screen">
-            <div class="p-4">
-                <h2 class="text-xl font-semibold">Division5 Reports</h2>
+            <div class="p-4 border-b">
+                <h2 class="text-2xl font-semibold text-gray-800">Division5 Reports</h2>
             </div>
-            <nav class="mt-5">
-                <ul>
-                    <li class="px-4 py-2 hover:bg-gray-200"><a href="#">Dashboard</a></li>
-                    <li class="px-4 py-2 hover:bg-gray-200"><a href="#">Tasks</a></li>
-                    <li class="px-4 py-2 hover:bg-gray-200"><a href="#">Reports</a></li>
-                    <li class="px-4 py-2 hover:bg-gray-200"><a href="#">Settings</a></li>
-                </ul>
-            </nav>
+            <!-- Sidebar content -->
+            {% if request.session.get('user_id') %}
+            <div class="p-4">
+                <form method="post" action="/user/logout">
+                    <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+                    <button type="submit" class="text-blue-500 hover:underline">Logout</button>
+                </form>
+            </div>
+            {% endif %}
         </div>
-        <!-- Main Content Here-->
-        <div class="flex-1 p-6">
+        <div id="main-content" class="flex-1 p-6">
             {% block content %}
             <!-- Content Here -->
             {% endblock %}
         </div>
     </div>
-
 </body>
 </html>

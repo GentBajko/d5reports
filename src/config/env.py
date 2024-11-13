@@ -15,6 +15,8 @@ class EnvironmentConfig(BaseSettings):
     LOGURU_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
     
     ENV: str = Field(default="dev", env="ENV")
+    
+    SECRET_KEY: str = Field(default=..., env="SECRET_KEY")
 
     class Config:
         env_file = ".env"

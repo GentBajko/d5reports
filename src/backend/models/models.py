@@ -76,3 +76,8 @@ class UserResponseModel(BaseModel):
     permissions: int
     tasks: Optional[List[TaskResponseModel]] = Field(default=None)
     projects: Optional[List[ProjectResponseModel]] = Field(default=None)
+
+
+class UserLoginModel(BaseModel):
+    email: str
+    password: str
