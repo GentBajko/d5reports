@@ -1,3 +1,4 @@
+<h1></h1>
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
     <thead>
         <tr class="bg-gray-800 text-white">
@@ -22,6 +23,14 @@
                             {% else %}
                                 {{ row[key] }}
                             {% endif %}
+                        {% elif field in ['Archived', 'Send Email'] %}
+                            {% if row[key] == 'True' %}
+                            <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ row[key] }}</span>
+                            {% else %}
+                            <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ row[key] }}</span>
+                            {% endif %}
+                        {% elif field == 'Name' %}
+                            <a href="{{ url }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
                         {% else %}
                             {{ row[key] }}
                         {% endif %}

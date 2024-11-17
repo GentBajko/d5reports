@@ -33,6 +33,9 @@ class SQLAlchemySession(ISession):
 
     def query(self, model: Type[T], *args, **kwargs) -> List[T]:
         return self._session.query(model).filter_by(*args, **kwargs).all()
+    
+    def execute(self, stmt: Any) -> None:
+        self._session.execute(stmt)
 
     def __enter__(self) -> "SQLAlchemySession":
         return self

@@ -17,12 +17,25 @@ from src.backend.views.user_view import (
     get_all_users,
     authenticate_user,
 )
-from src.backend.dependencies.auth import validate_csrf, get_current_user
+from src.backend.dependencies.auth import (
+    is_admin,
+    validate_csrf,
+    get_current_user,
+)
 from src.database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
 
 user_router = APIRouter(prefix="/user")
+
+
+@user_router.get("/")
+def get_user_home(
+    request: Request, current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=401, detail="Access forbidden")
+    return templates.TemplateResponse("user/create.html", {"request": request})
 
 
 @user_router.post("/")
@@ -41,7 +54,10 @@ async def create_user_endpoint(
         password=password,
         permissions=permissions,
     )
-    return create_user(user, session)
+    return templates.TemplateResponse(
+        "user/detail.html",
+        {"request": request, "user": create_user(user, session)},
+    )
 
 
 @user_router.get("/login", response_class=HTMLResponse)

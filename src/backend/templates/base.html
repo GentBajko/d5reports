@@ -27,6 +27,12 @@
                 </form>
             </div>
             <div class="p-4">
+                <form method="get" action="/project">
+                    <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+                    <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out after:bg-[#5669CC] after:transition after:duration-200 after:ease-in-out">Projects</button>
+                </form>
+            </div>
+            <div class="p-4">
                 <form method="post" action="/user/logout">
                     <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
                     <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out after:bg-[#5669CC] after:transition after:duration-200 after:ease-in-out">Logout</button>

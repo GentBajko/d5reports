@@ -8,8 +8,9 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from src.config.env import ENV
 from src.backend.controllers.user_controller import user_router
-from src.backend.controllers.healthcheck_controller import healthcheck_router
+from src.backend.controllers.project_controller import project_router
 from src.backend.controllers.dashboard_controller import dashboard_router
+from src.backend.controllers.healthcheck_controller import healthcheck_router
 
 app = FastAPI(title="Division5 Reports API", version="0.1.0")
 
@@ -56,4 +57,5 @@ app.add_middleware(
 
 app.include_router(healthcheck_router, tags=["Health Check"])
 app.include_router(user_router, tags=["User"])
+app.include_router(project_router, tags=["Project"])
 app.include_router(dashboard_router, tags=["Dashboard"])

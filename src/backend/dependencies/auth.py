@@ -2,7 +2,6 @@ from fastapi import Depends, Request, HTTPException
 
 from src.core.models.user import User
 from src.core.enums.premissions import Permissions
-from src.database.adapters.mysql import MySQL
 from src.database.interfaces.session import ISession
 from src.backend.dependencies.db_session import get_session
 from src.database.repositories.repository import Repository
@@ -22,11 +21,8 @@ def get_current_user(
     return user
 
 
-def is_admin(**kwargs) -> bool:
-    with MySQL.session() as s:
-        repository = Repository(s, User)  # type: ignore
-        user = repository.query(**kwargs)[0]
-        return Permissions(user.permissions) == Permissions.ADMIN
+def is_admin(current_user: User) -> bool:
+    return Permissions(current_user.permissions) == Permissions.ADMIN
 
 
 async def validate_csrf(request: Request):

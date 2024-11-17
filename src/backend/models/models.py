@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import Field, EmailStr, BaseModel
 
@@ -58,8 +58,8 @@ class ProjectResponseModel(BaseModel):
     email: EmailStr
     send_email: bool
     archived: bool
-    developers: List["UserResponseModel"]
-    tasks: List[TaskResponseModel]
+    developers: Union[List["UserResponseModel"], str] = Field(default_factory=list)
+    tasks: Union[List[TaskResponseModel], str] = Field(default_factory=list)
 
 
 class UserCreateModel(BaseModel):
