@@ -9,6 +9,7 @@ task_table = Table(
     mapper_registry.metadata,
     Column("id", String(26), primary_key=True),
     Column("project_id", String(26), ForeignKey("project.id"), nullable=False),
+    Column("project_name", String(100), nullable=False),
     Column("user_id", String(26), ForeignKey("user.id"), nullable=False),
     Column("title", String(100), nullable=False),
     Column("hours_required", Float, nullable=False),

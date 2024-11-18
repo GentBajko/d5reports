@@ -1,5 +1,6 @@
 from typing import List
 
+from src.backend.utils.populate_fields import populate_task_fields
 from src.backend.models import TaskCreateModel, TaskResponseModel
 from src.database.models import task_mapper  # noqa F401
 from src.core.models.task import Task
@@ -23,9 +24,13 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
             raise ValueError("Project not found")
 
         repo = Repository(s, Task)
+        project_repo = Repository(s, Project)
+        
+        project = project_repo.query(id=task.project_id)
 
         new_task = Task(
             project_id=project[0].id,
+            project_name=project[0].name,
             user_id=task.user_id,
             title=task.title,
             hours_required=task.hours_required,
@@ -93,15 +98,18 @@ def upsert_task(
 
     with session as s:
         repo = Repository[Task](s, Task)
+        project_repo = Repository(s, Project)
         existing_task = repo.get(id=task.id)
+        project = project_repo.query(id=task.project_id)
         if existing_task:
-            for attr, value in task.dict().items():
+            for attr, value in task.model_dump().items():
                 setattr(existing_task, attr, value)
             s.commit()
             task_dict = existing_task.to_dict()
         else:
             new_task = Task(
                 project_id=task.project_id,
+                project_name=project[0].name,
                 user_id=task.user_id,
                 title=task.title,
                 hours_required=task.hours_required,
@@ -124,8 +132,11 @@ def get_all_tasks(session: ISession) -> List[TaskResponseModel]:
     with session as s:
         repo = Repository(s, Task)
         tasks = repo.query()
+        task_dicts = [task.to_dict() for task in tasks]
+        for task in task_dicts:
+            populate_task_fields(task)
         tasks_list = [
-            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
+            TaskResponseModel.model_validate(task) for task in task_dicts
         ]
     return tasks_list
 

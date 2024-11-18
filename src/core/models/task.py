@@ -12,6 +12,7 @@ class Task:
     def __init__(
         self,
         project_id: str,
+        project_name: str,
         user_id: str,
         title: str,
         hours_required: float,
@@ -22,6 +23,7 @@ class Task:
     ):
         self.id = id or str(ULID())
         self.project_id = project_id
+        self.project_name = project_name
         self.user_id = user_id
         self.title = title
         self.hours_required = hours_required
@@ -53,6 +55,7 @@ class Task:
         return {
             "id": self.id,
             "project_id": self.project_id,
+            "project_name": self.project_name,
             "user_id": self.user_id,
             "title": self.title,
             "hours_required": self.hours_required,
@@ -68,6 +71,7 @@ class Task:
         return cls(
             id=data["id"],
             project_id=data["project_id"],
+            project_name=data["project_name"],
             user_id=data["user_id"],
             title=data["title"],
             hours_required=data["hours_required"],
