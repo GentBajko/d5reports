@@ -8,9 +8,9 @@
 
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
     <thead>
-        <tr class="bg-gray-800 text-white">
+        <tr class="bg-[#002F41] text-white">
             {% for header in headers %}
-                <th class="w-1/{{ headers|length }} text-left py-3 px-4 uppercase font-semibold text-sm">{{ header }}</th>
+                <th class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm">{{ header }}</th>
             {% endfor %}
         </tr>
     </thead>
@@ -18,8 +18,8 @@
         {% for row in data %}
             <tr class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100">
                 {% for field in headers %}
-                    {% set key = field.lower() %}
-                    <td class="w-1/{{ headers|length }} text-left py-3 px-4">
+                    {% set key = field.lower().replace(" ", "_") %}
+                    <td class="w-1/{{ headers|length }} text-center py-3 px-4">
                         {% if field == 'Status' %}
                             {% if row[key] == 'Active' %}
                                 <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ row[key] }}</span>
@@ -31,7 +31,7 @@
                                 {{ row[key] }}
                             {% endif %}
                         {% elif field in ['Archived', 'Send Email'] %}
-                            {% if row[key] == 'True' %}
+                            {% if row[key] == True %}
                                 <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">Yes</span>
                             {% else %}
                                 <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">No</span>
@@ -39,9 +39,9 @@
                         {% elif field == 'Name' %}
                             <a href="/project/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
                         {% elif field == 'Developers' %}
-                            <a href="/project/{{ row['id'] }}/users" class="text-[#0e5c6a] hover:underline">{{ row[key]|length }}</a>
+                            <a href="/project/{{ row['id'] }}/users" class="text-[#0e5c6a] hover:underline">{{ row[key]|length }} {{ 'Developer' if row[key]|length == 1 else 'Developers' }}</a>
                         {% elif field == 'Tasks' %}
-                            <a href="/project/{{ row['id'] }}/tasks" class="text-[#0e5c6a] hover:underline">{{ row[key]|length }}</a>
+                            <a href="/project/{{ row['id'] }}/tasks" class="text-[#0e5c6a] hover:underline">{{ row[key]|length }} {{ 'Task' if row[key]|length == 1 else 'Tasks' }}</a>
                         {% else %}
                             {{ row[key] }}
                         {% endif %}

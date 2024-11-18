@@ -322,6 +322,6 @@ def get_project_by_user(
                 developer.setdefault("tasks", project_dict.get("tasks", []))
 
         populate_project_fields(project_dict)
-
+        print(project_dict)
         output.append(ProjectResponseModel.model_validate(project_dict))
     return output

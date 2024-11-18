@@ -26,13 +26,13 @@ content %}
         <a
           href="/user/{{ row['id'] }}/projects"
           class="text-[#0e5c6a] hover:underline"
-          >{{ row[key]|length }}</a
+          >{{ row[key]|length }} {{'Project' if row[key]|length == 1 else 'Projects'}}</a
         >
         {% elif field == 'Tasks' %}
         <a
           href="/user/{{ row['id'] }}/tasks"
           class="text-[#0e5c6a] hover:underline"
-          >{{ row[key]|length }}</a
+          >{{ row[key]|length }} {{'Task' if row[key]|length == 1 else 'Tasks'}}</a
         >
         {% else %} {{ row[key] }} {% endif %}
       </td>
