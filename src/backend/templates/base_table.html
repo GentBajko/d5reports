@@ -25,12 +25,16 @@
                             {% endif %}
                         {% elif field in ['Archived', 'Send Email'] %}
                             {% if row[key] == 'True' %}
-                            <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ row[key] }}</span>
+                                <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">Yes</span>
                             {% else %}
-                            <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ row[key] }}</span>
+                                <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">No</span>
                             {% endif %}
                         {% elif field == 'Name' %}
-                            <a href="{{ url }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
+                            <a href="/{{ entity }}/single/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
+                        {% elif field == 'Developers' %}
+                            <a href="/user/project/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
+                        {% elif field == 'Tasks' %}
+                            <a href="/{{ entity }}/single/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
                         {% else %}
                             {{ row[key] }}
                         {% endif %}

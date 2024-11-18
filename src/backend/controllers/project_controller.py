@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -22,7 +20,9 @@ from src.backend.views.project_view import (
     update_project,
     upsert_project,
     get_all_projects,
+    get_project_tasks,
     get_users_projects,
+    get_user_by_project,
     assign_project_to_user,
 )
 from src.database.interfaces.session import ISession
@@ -53,9 +53,16 @@ async def create_project_endpoint(
 
 @project_router.get("/{project_id}", response_class=HTMLResponse)
 def get_project_endpoint(
-    request: Request, project_id: str, session: ISession = Depends(get_session)
+    request: Request,
+    project_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
     project = get_project(session, id=project_id)
+    if not is_admin(current_user) and project_id not in [
+        project.id for project in get_users_projects(current_user.id, session)
+    ]:
+        raise HTTPException(status_code=403, detail="Access forbidden")
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return templates.TemplateResponse(
@@ -88,25 +95,27 @@ def get_all_projects_endpoint(
     projects = (
         get_all_projects(session)
         if is_admin(current_user)
-        else [project for project in get_users_projects(current_user.id, session)]
+        else [
+            project for project in get_users_projects(current_user.id, session)
+        ]
     )
-    print(projects)
-    table_headers = ["Name", "Email", "Send Email", "Archived", "Developers", "Tasks"]
+    table_headers = [
+        "Name",
+        "Email",
+        "Send Email",
+        "Archived",
+        "Developers",
+        "Tasks",
+    ]
     return templates.TemplateResponse(
-        "project/projects.html", {"request": request, "headers": table_headers, "data": projects}
+        "project/projects.html",
+        {
+            "request": request,
+            "headers": table_headers,
+            "data": projects,
+            "entity": "project",
+        },
     )
-
-
-@project_router.get(
-    "/{user_id}/user_projects", response_model=List[ProjectResponseModel]
-)
-def get_users_projects_endpoint(
-    request: Request,
-    user_id: str,
-    session: ISession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-):
-    raise HTTPException(status_code=403, detail="Access forbidden")
 
 
 @project_router.post(
@@ -118,3 +127,37 @@ def assign_project_to_user_endpoint(
     session: ISession = Depends(get_session),
 ):
     return assign_project_to_user(project_id, user_id, session)
+
+
+@project_router.get("/{project_id}/users", response_class=HTMLResponse)
+def get_user_by_project_endpoint(
+    request: Request,
+    project_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    users = get_user_by_project(session, project_id)
+    context = {
+        "request": request,
+        "headers": ["Full Name", "Email", "Projects", "Tasks"],
+        "data": users,
+        "entity": "user",
+    }
+    return templates.TemplateResponse("user/users.html", context)
+
+
+@project_router.get("/{project_id}/tasks", response_class=HTMLResponse)
+def get_tasks_by_project_endpoint(
+    request: Request,
+    project_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    tasks = get_project_tasks(session, project_id)
+    context = {
+        "request": request,
+        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "data": tasks,
+        "entity": "task",
+    }
+    return templates.TemplateResponse("task/tasks.html", context)

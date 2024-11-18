@@ -15,7 +15,9 @@ from src.backend.views.user_view import (
     update_user,
     upsert_user,
     get_all_users,
+    get_user_tasks,
     authenticate_user,
+    get_project_by_user,
 )
 from src.backend.dependencies.auth import (
     is_admin,
@@ -126,5 +128,47 @@ def get_all_users_endpoint(
 ):
     users = get_all_users(session)
     return templates.TemplateResponse(
-        "user/users.html", {"request": request, "users": users}
+        "user/users.html",
+        {"request": request, "data": users, "entity": "user"},
     )
+
+
+@user_router.get("/{user_id}/projects", response_class=HTMLResponse)
+def get_user_projects_endpoint(
+    request: Request,
+    user_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    projects = get_project_by_user(session, user_id)
+    context = {
+        "request": request,
+        "headers": [
+            "Name",
+            "Email",
+            "Send Email",
+            "Archived",
+            "Developers",
+            "Tasks",
+        ],
+        "data": projects,
+        "entity": "user",
+    }
+    return templates.TemplateResponse("project/projects.html", context)
+
+
+@user_router.get("/{user_id}/tasks", response_class=HTMLResponse)
+def get_user_tasks_endpoint(
+    request: Request,
+    project_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    tasks = get_user_tasks(session, project_id)
+    context = {
+        "request": request,
+        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "data": tasks,
+        "entity": "task",
+    }
+    return templates.TemplateResponse("task/tasks.html", context)

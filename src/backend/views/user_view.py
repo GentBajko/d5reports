@@ -1,17 +1,25 @@
 from typing import List, Optional
 
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+
 from src.backend.models import (
     UserCreateModel,
     UserResponseModel,
     ProjectResponseModel,
 )
 from src.database.models import user_mapper  # noqa F401
+from src.core.models.task import Task
 from src.core.models.user import User
+from src.core.models.project import Project
+from src.backend.models.models import TaskResponseModel
+from src.core.models.project_user import ProjectUser
 from src.database.interfaces.session import ISession
-from src.backend.utils.populate_fields import populate_developer_fields
+from src.backend.utils.populate_fields import (
+    populate_project_fields,
+    populate_developer_fields,
+)
 from src.database.repositories.repository import Repository
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 
 
 def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
@@ -188,26 +196,26 @@ def upsert_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
     return UserResponseModel.model_validate(user_dict)
 
 
-def get_all_users(session: ISession) -> List[UserResponseModel]:
+def get_all_users(session: ISession, **kwargs) -> List[UserResponseModel]:
     """
-    Retrieve all users from the database.
+    Retrieve users from the database.
 
-    This function rebuilds the user response model, queries the database for all users, and processes
-    each user's associated projects and developers to ensure necessary fields are populated. It then
-    validates and returns a list of users as `UserResponseModel` instances.
+    If no keyword arguments are provided, it retrieves all users.
+    If keyword arguments are provided, it filters the query using them.
 
     Args:
         session (ISession): The database session used for querying users.
+        **kwargs: Arbitrary keyword arguments for filtering users.
 
     Returns:
-        List[UserResponseModel]: A list of validated response models representing all users.
+        List[UserResponseModel]: A list of validated response models representing the users.
     """
     UserResponseModel.model_rebuild()
 
     with session as s:
         repository = Repository(s, User)
-        users = repository.query()
-        user_dicts = [user.to_dict() for user in users]
+        query = repository.query(**kwargs)
+        user_dicts = [user.to_dict() for user in query]
 
     output = []
     for user_dict in user_dicts:
@@ -216,9 +224,104 @@ def get_all_users(session: ISession) -> List[UserResponseModel]:
                 for developer in project.get("developers", []):
                     if isinstance(developer, dict):
                         developer.setdefault("email", user_dict.get("email"))
-                        developer.setdefault("full_name", user_dict.get("full_name"))
+                        developer.setdefault(
+                            "full_name", user_dict.get("full_name")
+                        )
                         developer.setdefault("tasks", project.get("tasks", []))
-                        developer.setdefault("permissions", user_dict.get("permissions"))
+                        developer.setdefault(
+                            "permissions", user_dict.get("permissions")
+                        )
         output.append(UserResponseModel.model_validate(user_dict))
     return output
 
+
+def get_user_tasks(session: ISession, user_id: str) -> List[TaskResponseModel]:
+    """
+    Retrieve all tasks associated with a user.
+
+    This function rebuilds the necessary models, queries the database for all tasks associated with a
+    user, and populates user fields within the task's associated project. It then validates and
+    returns the task data as a list of `TaskResponseModel`.
+
+    Args:
+        session (ISession): The database session used for querying the tasks.
+        user_id (str): The unique identifier of the user to filter tasks.
+
+    Returns:
+        List[TaskResponseModel]: A list of validated response models representing the tasks.
+    """
+    TaskResponseModel.model_rebuild()
+    ProjectResponseModel.model_rebuild()
+
+    with session as s:
+        repository = Repository(s, Task)
+        tasks = repository.query(user_id=user_id)
+        if not tasks:
+            return []
+        task_dicts = [task.to_dict() for task in tasks]
+
+    output = []
+    for task_dict in task_dicts:
+        for project in task_dict.get("project", []):
+            if isinstance(project, dict):
+                project.setdefault("tasks", [])
+                project["tasks"].append(task_dict)
+                populate_project_fields(project)
+        output.append(TaskResponseModel.model_validate(task_dict))
+    return output
+
+
+def get_project_by_user(
+    session: ISession, user_id: str
+) -> List[ProjectResponseModel]:
+    """
+    Retrieve all projects associated with a user.
+
+    This function rebuilds the necessary models, queries the database for all projects associated with a
+    user, and populates developer fields within the project's associated users. It then validates and
+    returns the project data as a list of `ProjectResponseModel`.
+
+    Args:
+        session (ISession): The database session used for querying the projects.
+        user_id (str): The unique identifier of the user to filter projects.
+
+    Returns:
+        List[ProjectResponseModel]: A list of validated response models representing the projects.
+
+    Raises:
+        IndexError: If no projects are associated with the specified user.
+    """
+    ProjectResponseModel.model_rebuild()
+    UserResponseModel.model_rebuild()
+
+    with session as s:
+        assoc = Repository(s, ProjectUser)
+        result = assoc.query(user_id=user_id)
+        if not result:
+            raise IndexError(f"No projects associated with user {user_id}.")
+        project_ids = [row.project_id for row in result]
+
+        repository = Repository(s, Project)
+        projects: List[Project] = []
+
+        for project_id in project_ids:
+            project = repository.get(project_id)
+
+            if project:
+                projects.append(project)
+
+        if not projects:
+            return []
+
+        project_dicts = [project.to_dict() for project in projects]
+
+    output = []
+    for project_dict in project_dicts:
+        for developer in project_dict.get("developers", []):
+            if isinstance(developer, dict):
+                developer.setdefault("tasks", project_dict.get("tasks", []))
+
+        populate_project_fields(project_dict)
+
+        output.append(ProjectResponseModel.model_validate(project_dict))
+    return output

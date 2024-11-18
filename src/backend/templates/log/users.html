@@ -5,7 +5,7 @@ content %}
 
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
   <thead>
-    <tr class="bg-[#002F41] text-white">
+    <tr class="bg-gray-800 text-white">
       {% for header in headers %}
       <th
         class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
@@ -24,13 +24,13 @@ content %}
       <td class="w-1/{{ headers|length }} text-center py-3 px-4">
         {% if field == 'Projects' %}
         <a
-          href="/user/{{ row['id'] }}/projects"
+          href="/project/user/{{ row['id'] }}"
           class="text-[#0e5c6a] hover:underline"
           >{{ row[key]|length }}</a
         >
         {% elif field == 'Tasks' %}
         <a
-          href="/user/{{ row['id'] }}/tasks"
+          href="/task/user/{{ row['id'] }}"
           class="text-[#0e5c6a] hover:underline"
           >{{ row[key]|length }}</a
         >

@@ -29,3 +29,4 @@ class Repository(Generic[T]):
 
     def query(self, *args, **kwargs) -> List[T]:
         return self.session.query(self.model, *args, **kwargs)
+
