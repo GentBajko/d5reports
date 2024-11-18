@@ -30,6 +30,14 @@ dev = [
     "ruff>=0.7.2",
 ]
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = {find = {"where" = ["src"]}}
+
 [tool.ruff]
 exclude = [
     ".bzr",
