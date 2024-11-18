@@ -262,11 +262,9 @@ def get_user_tasks(session: ISession, user_id: str) -> List[TaskResponseModel]:
 
     output = []
     for task_dict in task_dicts:
-        for project in task_dict.get("project", []):
+        for project in task_dict.get("logs", []):
             if isinstance(project, dict):
-                project.setdefault("tasks", [])
-                project["tasks"].append(task_dict)
-                populate_project_fields(project)
+                project.setdefault("logs", [])
         output.append(TaskResponseModel.model_validate(task_dict))
     return output
 

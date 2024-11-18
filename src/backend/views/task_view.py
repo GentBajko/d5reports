@@ -3,6 +3,7 @@ from typing import List
 from src.backend.models import TaskCreateModel, TaskResponseModel
 from src.database.models import task_mapper  # noqa F401
 from src.core.models.task import Task
+from src.core.models.project import Project
 from src.database.interfaces.session import ISession
 from src.database.repositories.repository import Repository
 
@@ -12,21 +13,31 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
     Create a new task in the database.
     """
     TaskResponseModel.model_rebuild()
-    new_task = Task(
-        project_id=task.project_id,
-        project_name=task.project_name,
-        user_id=task.user_id,
-        title=task.title,
-        hours_required=task.hours_required,
-        description=task.description,
-        status=task.status,
-        logs=[],
-    )
+
     with session as s:
-        repo = Repository[Task](s, Task)
+        project_repo = Repository(s, Project)
+
+        project = project_repo.query(id=task.project_name)
+
+        if not project:
+            raise ValueError("Project not found")
+
+        repo = Repository(s, Task)
+
+        new_task = Task(
+            project_id=project[0].id,
+            user_id=task.user_id,
+            title=task.title,
+            hours_required=task.hours_required,
+            description=task.description,
+            status=task.status,
+            logs=[],
+        )
+
         repo.create(new_task)
         s.commit()
         task_data = new_task.to_dict()
+        task_data["project_name"] = project[0].name
     return TaskResponseModel.model_validate(task_data)
 
 
@@ -37,10 +48,15 @@ def get_task(session: ISession, **kwargs) -> TaskResponseModel:
     TaskResponseModel.model_rebuild()
     with session as s:
         repo = Repository[Task](s, Task)
+        project_repo = Repository(s, Project)
+
         task = repo.query(**kwargs)
         if not task:
             raise ValueError("Task not found")
-        task_dict = task[0].to_dict()
+        task_obj = task[0]
+        project = project_repo.get(id=task_obj.project_id)
+        task_dict = task_obj.to_dict()
+        task_dict["project_name"] = project.name if project else ""
     return TaskResponseModel.model_validate(task_dict)
 
 
@@ -86,7 +102,6 @@ def upsert_task(
         else:
             new_task = Task(
                 project_id=task.project_id,
-                project_name=task.project_name,
                 user_id=task.user_id,
                 title=task.title,
                 hours_required=task.hours_required,

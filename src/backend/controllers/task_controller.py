@@ -1,6 +1,7 @@
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from ulid import ULID
 
 from src.backend.models import TaskCreateModel, TaskResponseModel
 from src.database.models import task_mapper  # noqa F401
@@ -38,23 +39,24 @@ def get_task_home(
 @task_router.post("/", response_class=HTMLResponse)
 async def create_task_endpoint(
     request: Request,
-    project_id: str = Form(...),
     project_name: str = Form(...),
-    user_id: str = Form(...),
     title: str = Form(...),
     hours_required: float = Form(...),
     description: str = Form(...),
     status: str = Form(...),
     session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     csrf_protect=Depends(validate_csrf),
 ):
     """
     Endpoint to create a new task.
     """
+    
+    
     task_data = TaskCreateModel(
-        project_id=project_id,
+        project_id=str(ULID()),
         project_name=project_name,
-        user_id=user_id,
+        user_id=current_user.id,
         title=title,
         hours_required=hours_required,
         description=description,

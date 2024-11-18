@@ -1,12 +1,12 @@
 from .models import (
-    TaskLogModel,
+    LogCreateModel,
     TaskCreateModel,
     UserCreateModel,
+    LogResponseModel,
     TaskResponseModel,
     UserResponseModel,
     ProjectCreateModel,
     ProjectResponseModel,
-    TaskLogResponseModel,
 )
 
 __all__ = [
@@ -16,6 +16,6 @@ __all__ = [
     "TaskResponseModel",
     "UserCreateModel",
     "UserResponseModel",
-    "TaskLogModel",
-    "TaskLogResponseModel",
+    "LogCreateModel",
+    "LogResponseModel",
 ]

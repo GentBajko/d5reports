@@ -1,26 +1,28 @@
-from typing import List, Optional, Union
+from typing import List, Union, Optional
+from datetime import datetime
 
+from ulid import ULID
 from pydantic import Field, EmailStr, BaseModel
 
 
-class TaskLogModel(BaseModel):
-    timestamp: int
-    task_id: str
+class LogCreateModel(BaseModel):
+    task_name: str
+    description: str
+    hours_spent_today: int
+    task_status: str
+    user_id: Optional[str] = None
+    timestamp: int = Field(default=datetime.now().timestamp())
+    task_id: str = Field(default=str(ULID()))
+
+
+class LogResponseModel(BaseModel):
     task_name: str
     description: str
     user_id: str
     hours_spent_today: int
     task_status: str
-
-
-class TaskLogResponseModel(BaseModel):
-    timestamp: int
-    task_id: str
-    task_name: str
-    description: str
-    user_id: str
-    hours_spent_today: int
-    task_status: str
+    timestamp: int = Field(default=datetime.now().timestamp())
+    task_id: str = Field(default=str(ULID()))
 
 
 class TaskCreateModel(BaseModel):
@@ -42,7 +44,7 @@ class TaskResponseModel(BaseModel):
     hours_required: float
     description: str
     status: str
-    logs: List[TaskLogModel]
+    logs: List[LogCreateModel]
 
 
 class ProjectCreateModel(BaseModel):
@@ -58,7 +60,9 @@ class ProjectResponseModel(BaseModel):
     email: EmailStr
     send_email: bool
     archived: bool
-    developers: Union[List["UserResponseModel"], str] = Field(default_factory=list)
+    developers: Union[List["UserResponseModel"], str] = Field(
+        default_factory=list
+    )
     tasks: Union[List[TaskResponseModel], str] = Field(default_factory=list)
 
 
