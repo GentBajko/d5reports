@@ -31,3 +31,31 @@ def populate_project_fields(project_dict):
                     dev_project.setdefault(
                         "archived", project_dict.get("archived")
                     )
+
+
+def populate_task_fields(task_dict: dict) -> None:
+    """
+    Populate task dictionary with related fields and logs.
+
+    Args:
+        task_dict: Dictionary containing task data
+    """
+    # Populate basic task fields with defaults if missing
+    task_dict.setdefault("title", task_dict.get("title", ""))
+    task_dict.setdefault("description", task_dict.get("description", ""))
+    task_dict.setdefault("hours_required", task_dict.get("hours_required", 0))
+    task_dict.setdefault("status", task_dict.get("status", "Pending"))
+
+    # Populate logs if they exist
+    logs = task_dict.get("logs", [])
+    for log in logs:
+        if isinstance(log, dict):
+            log.setdefault("task_name", task_dict.get("title"))
+            log.setdefault("task_status", task_dict.get("status"))
+            log.setdefault(
+                "hours_spent_today", log.get("hours_spent_today", 0)
+            )
+            log.setdefault("description", log.get("description", ""))
+            log.setdefault("timestamp", log.get("timestamp", 0))
+            log.setdefault("user_id", task_dict.get("user_id"))
+            log.setdefault("task_id", task_dict.get("id"))

@@ -46,8 +46,13 @@ def get_project(session: ISession, **kwargs) -> ProjectResponseModel:
     ProjectResponseModel.model_rebuild()
     with session as s:
         repository = Repository(s, Project)
-        project = repository.query(**kwargs)[0]
-        project_dict = project.to_dict()
+        print(kwargs)
+        project = repository.query(**kwargs) if kwargs else repository.query()
+
+        if not project:
+            raise ValueError("Project not found")
+
+        project_dict = project[0].to_dict()
         populate_project_fields(project_dict)
     return ProjectResponseModel.model_validate(project_dict)
 
@@ -162,8 +167,6 @@ def get_users_projects(
 
             project_dicts = [project.to_dict() for project in projects]
             for project in project_dicts:
-                project["developers"] = str(len(project["developers"]))
-                project["tasks"] = str(len(project["tasks"]))
                 populate_project_fields(project)
 
         return [

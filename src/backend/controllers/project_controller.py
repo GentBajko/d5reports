@@ -50,6 +50,25 @@ async def create_project_endpoint(
     )
     return create_project(project, session)
 
+@project_router.get("/options", response_class=HTMLResponse)
+def get_project_options(
+    request: Request,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    projects = (
+        get_all_projects(session)
+        if is_admin(current_user)
+        else [
+            project for project in get_users_projects(current_user.id, session)
+        ]
+    )
+
+    options_html = ""
+    for project in projects:
+        options_html += f'<option value="{project.id}">{project.name}</option>'
+
+    return HTMLResponse(content=options_html)
 
 @project_router.get("/{project_id}", response_class=HTMLResponse)
 def get_project_endpoint(
