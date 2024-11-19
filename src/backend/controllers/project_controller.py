@@ -1,4 +1,7 @@
+from typing import Optional
+
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -7,13 +10,17 @@ from backend.models import (
     ProjectResponseModel,
 )
 from database.models import project_mapper  # noqa F401
+from core.models.task import Task
 from core.models.user import User
+from core.models.project import Project
 from backend.dependencies import get_session
+from backend.utils.pagination import calculate_pagination
 from backend.dependencies.auth import (
     is_admin,
     validate_csrf,
     get_current_user,
 )
+from backend.models.pagination import Pagination
 from backend.views.project_view import (
     get_project,
     create_project,
@@ -57,11 +64,15 @@ def get_project_options(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
+    pagination = calculate_pagination(total=0, page=1, per_page=15)
     projects = (
-        get_all_projects(session)
+        get_all_projects(session, pagination)[0]
         if is_admin(current_user)
         else [
-            project for project in get_users_projects(current_user.id, session)
+            project
+            for project in get_users_projects(
+                current_user.id, session, pagination
+            )[0]
         ]
     )
 
@@ -80,8 +91,12 @@ def get_project_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     project = get_project(session, id=project_id)
+    pagination = calculate_pagination(total=0, page=1, per_page=15)
     if not is_admin(current_user) and project_id not in [
-        project.id for project in get_users_projects(current_user.id, session)
+        project.id
+        for project in get_users_projects(
+            current_user.id, session, pagination
+        )[0]
     ]:
         raise HTTPException(status_code=403, detail="Access forbidden")
     if not project:
@@ -110,16 +125,37 @@ def upsert_project_endpoint(
 @project_router.get("/", response_class=HTMLResponse)
 def get_all_projects_endpoint(
     request: Request,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    projects = (
-        get_all_projects(session)
-        if is_admin(current_user)
-        else [
-            project for project in get_users_projects(current_user.id, session)
-        ]
-    )
+    """
+    Endpoint to retrieve all projects with pagination.
+
+    - If the current user is an admin, retrieves all projects.
+    - Otherwise, retrieves projects associated with the current user.
+    """
+    order_by = []
+    if sort:
+        sort_column = getattr(Project, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    if is_admin(current_user):
+        projects, pagination = get_all_projects(session, pagination)
+    else:
+        projects, pagination = get_users_projects(
+            current_user.id, session, pagination
+        )
+
     table_headers = [
         "Name",
         "Email",
@@ -128,13 +164,17 @@ def get_all_projects_endpoint(
         "Developers",
         "Tasks",
     ]
+
     return templates.TemplateResponse(
         "project/projects.html",
         {
             "request": request,
             "headers": table_headers,
             "data": projects,
+            "pagination": pagination,
             "entity": "project",
+            "current_sort": sort,
+            "current_order": order,
         },
     )
 
@@ -154,15 +194,41 @@ def assign_project_to_user_endpoint(
 def get_user_by_project_endpoint(
     request: Request,
     project_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    users = get_user_by_project(session, project_id)
+    """
+    Endpoint to retrieve users associated with a specific project with pagination.
+    """
+    order_by = []
+    if sort:
+        sort_column = getattr(User, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    users, pagination = get_user_by_project(session, project_id, pagination)
+
     context = {
         "request": request,
         "headers": ["Full Name", "Email", "Projects", "Tasks"],
         "data": users,
+        "pagination": pagination,
         "entity": "user",
+        "current_sort": sort,
+        "current_order": order,
     }
     return templates.TemplateResponse("user/users.html", context)
 
@@ -171,14 +237,40 @@ def get_user_by_project_endpoint(
 def get_tasks_by_project_endpoint(
     request: Request,
     project_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    tasks = get_project_tasks(session, project_id)
+    """
+    Endpoint to retrieve tasks associated with a specific project with pagination.
+    """
+    order_by = []
+    if sort:
+        sort_column = getattr(Task, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    tasks, pagination = get_project_tasks(session, project_id, pagination)
+
     context = {
         "request": request,
         "headers": ["Title", "Hours Required", "Description", "Status"],
         "data": tasks,
+        "pagination": pagination,
         "entity": "task",
+        "current_sort": sort,
+        "current_order": order,
     }
     return templates.TemplateResponse("task/tasks.html", context)

@@ -32,6 +32,8 @@ class Repository(Generic[T]):
         order_by: Optional[List[Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        options: Optional[List[Any]] = None,
+        *args,
         **filters,
     ) -> List[T]:
         return self.session.query(
@@ -39,6 +41,8 @@ class Repository(Generic[T]):
             order_by=order_by,
             limit=limit,
             offset=offset,
+            options=options,
+            *args,
             **filters,
         )
 

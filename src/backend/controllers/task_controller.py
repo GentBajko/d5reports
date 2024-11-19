@@ -1,9 +1,13 @@
+from typing import Optional
+from sqlalchemy import asc, desc
 from ulid import ULID
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.models import TaskCreateModel, TaskResponseModel
+from backend.models.pagination import Pagination
+from core.models.task import Task
 from database.models import task_mapper  # noqa F401
 from core.models.user import User
 from backend.dependencies import get_session
@@ -17,6 +21,7 @@ from backend.views.task_view import (
     get_project_tasks,
 )
 from backend.dependencies.auth import (
+    is_admin,
     validate_csrf,
     get_current_user,
 )
@@ -122,29 +127,48 @@ def upsert_task_endpoint(
 @task_router.get("/", response_class=HTMLResponse)
 def get_all_tasks_endpoint(
     request: Request,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Endpoint to retrieve all tasks.
-    """
-    tasks = get_all_tasks(session)
-    headers = ["Title", "Project", "User", "Status"]
-    data = [
-        {
-            "id": task.id,
-            "title": task.title,
-            "project_id": task.project_id,
-            "project_name": task.project_name,
-            "user_id": task.user_id,
-            "user_name": task.user_name,
-            "status": task.status,
-        }
-        for task in tasks
-    ]
+    order_by = []
+    if sort:
+        sort_column = getattr(Task, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    if is_admin(current_user):
+        tasks, pagination = get_all_tasks(session, pagination)
+    else:
+        tasks, pagination = get_user_tasks(
+            session, current_user.id, pagination
+        )
+
+    table_headers = ["Title", "Hours Required", "Description", "Status"]
+
     return templates.TemplateResponse(
         "task/tasks.html",
-        {"request": request, "headers": headers, "data": data},
+        {
+            "request": request,
+            "headers": table_headers,
+            "data": tasks,
+            "pagination": pagination,
+            "entity": "task",
+            "current_sort": sort,
+            "current_order": order,
+        },
     )
 
 
@@ -152,49 +176,80 @@ def get_all_tasks_endpoint(
 def get_tasks_by_project_endpoint(
     request: Request,
     project_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Endpoint to retrieve tasks by project.
-    """
-    tasks = get_project_tasks(session, project_id)
-    headers = ["Title", "User", "Status"]
-    data = [
-        {
-            "id": task.id,
-            "title": task.title,
-            "user_name": task.user_id,
-            "status": task.status,
-        }
-        for task in tasks
-    ]
-    return templates.TemplateResponse(
-        "task/tasks.html",
-        {"request": request, "headers": headers, "data": data},
-    )
+    order_by = []
+    if sort:
+        sort_column = getattr(Task, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    tasks, pagination = get_project_tasks(session, project_id, pagination)
+
+    context = {
+        "request": request,
+        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "data": tasks,
+        "pagination": pagination,
+        "entity": "task",
+        "current_sort": sort,
+        "current_order": order,
+    }
+    return templates.TemplateResponse("task/tasks.html", context)
 
 
-@task_router.get("/", response_class=HTMLResponse)
+@task_router.get("/user/{user_id}", response_class=HTMLResponse)
 def get_tasks_by_user_endpoint(
     request: Request,
+    user_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Endpoint to retrieve tasks by user.
-    """
-    tasks = get_user_tasks(session, current_user.id)
-    headers = ["Title", "Project", "Status"]
-    data = [
-        {
-            "id": task.id,
-            "title": task.title,
-            "project_name": task.project_name,
-            "status": task.status,
-        }
-        for task in tasks
-    ]
-    return templates.TemplateResponse(
-        "tasks.html", {"request": request, "headers": headers, "data": data}
-    )
+    order_by = []
+    if sort:
+        sort_column = getattr(Task, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    if current_user.id != user_id and not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    tasks, pagination = get_user_tasks(session, user_id, pagination)
+
+    context = {
+        "request": request,
+        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "data": tasks,
+        "pagination": pagination,
+        "entity": "task",
+        "current_sort": sort,
+        "current_order": order,
+    }
+    return templates.TemplateResponse("task/tasks.html", context)

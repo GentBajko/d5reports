@@ -1,6 +1,8 @@
-from typing import List
+from typing import List, Tuple
 
 from backend.models import TaskCreateModel, TaskResponseModel
+from backend.models.pagination import Pagination
+from backend.utils.pagination import calculate_pagination
 from database.models import task_mapper  # noqa F401
 from core.models.task import Task
 from core.models.project import Project
@@ -125,51 +127,111 @@ def upsert_task(
     return TaskResponseModel.model_validate(task_dict)
 
 
-def get_all_tasks(session: ISession) -> List[TaskResponseModel]:
-    """
-    Retrieve all tasks from the database.
-    """
+def get_all_tasks(
+    session: ISession, pagination: Pagination, **kwargs
+) -> Tuple[List[TaskResponseModel], Pagination]:
     TaskResponseModel.model_rebuild()
 
     with session as s:
         repo = Repository(s, Task)
-        tasks = repo.query()
+        total = repo.count(**kwargs)
+
+        pagination = calculate_pagination(
+            total=total,
+            page=pagination.current_page or 1,
+            per_page=pagination.limit or 15,
+        )
+
+        if total == 0:
+            return [], pagination
+
+        tasks = repo.query(
+            order_by=pagination.order_by,
+            limit=pagination.limit,
+            offset=pagination.offset,
+            **kwargs,
+        )
+
         task_dicts = [task.to_dict() for task in tasks]
-        for task in task_dicts:
-            populate_task_fields(task)
+        for task_dict in task_dicts:
+            populate_task_fields(task_dict)
+
         tasks_list = [
             TaskResponseModel.model_validate(task) for task in task_dicts
         ]
-    return tasks_list
+
+    return tasks_list, pagination
 
 
 def get_project_tasks(
-    session: ISession, project_id: str
-) -> List[TaskResponseModel]:
-    """
-    Retrieve all tasks associated with a specific project.
-    """
-    TaskResponseModel.model_rebuild()
-
-    with session as s:
-        repo = Repository[Task](s, Task)
-        tasks = repo.query(project_id=project_id)
-        tasks_list = [
-            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
-        ]
-    return tasks_list
-
-
-def get_user_tasks(session: ISession, user_id: str) -> List[TaskResponseModel]:
-    """
-    Retrieve all tasks assigned to a specific user.
-    """
+    session: ISession, project_id: str, pagination: Pagination, **kwargs
+) -> Tuple[List[TaskResponseModel], Pagination]:
     TaskResponseModel.model_rebuild()
 
     with session as s:
         repo = Repository(s, Task)
-        tasks = repo.query(user_id=user_id)
+        total = repo.count(project_id=project_id, **kwargs)
+
+        pagination = calculate_pagination(
+            total=total,
+            page=pagination.current_page or 1,
+            per_page=pagination.limit or 15,
+        )
+
+        if total == 0:
+            return [], pagination
+
+        tasks = repo.query(
+            project_id=project_id,
+            order_by=pagination.order_by,
+            limit=pagination.limit,
+            offset=pagination.offset,
+            **kwargs,
+        )
+
+        task_dicts = [task.to_dict() for task in tasks]
+        for task_dict in task_dicts:
+            populate_task_fields(task_dict)
+
         tasks_list = [
-            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
+            TaskResponseModel.model_validate(task) for task in task_dicts
         ]
-    return tasks_list
+
+    return tasks_list, pagination
+
+
+def get_user_tasks(
+    session: ISession, user_id: str, pagination: Pagination, **kwargs
+) -> Tuple[List[TaskResponseModel], Pagination]:
+    TaskResponseModel.model_rebuild()
+
+    with session as s:
+        repo = Repository(s, Task)
+        total = repo.count(user_id=user_id, **kwargs)
+
+        pagination = calculate_pagination(
+            total=total,
+            page=pagination.current_page or 1,
+            per_page=pagination.limit or 15,
+        )
+
+        if total == 0:
+            return [], pagination
+
+        tasks = repo.query(
+            user_id=user_id,
+            order_by=pagination.order_by,
+            limit=pagination.limit,
+            offset=pagination.offset,
+            **kwargs,
+        )
+
+        task_dicts = [task.to_dict() for task in tasks]
+        for task_dict in task_dicts:
+            populate_task_fields(task_dict)
+
+        tasks_list = [
+            TaskResponseModel.model_validate(task) for task in task_dicts
+        ]
+
+    return tasks_list, pagination

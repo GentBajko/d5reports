@@ -1,6 +1,6 @@
-from typing import Any, List, Type, TypeVar, Optional
+from typing import Any, Dict, List, Type, TypeVar, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database.interfaces.session import ISession
 
@@ -39,9 +39,17 @@ class SQLAlchemySession(ISession):
         order_by: Optional[List[Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        options: Optional[List[Any]] = None,
+        in_: Optional[Dict[Any, List[Any]]] = None,
         **filters,
     ) -> List[T]:
         query = self._session.query(model)
+
+        if in_:
+            in_filters = [
+                column.in_(in_values) for column, in_values in in_.items()
+            ]
+            query = query.filter(*in_filters)
 
         if filters:
             query = query.filter_by(**filters)
@@ -54,6 +62,10 @@ class SQLAlchemySession(ISession):
 
         if offset is not None:
             query = query.offset(offset)
+            
+        if options:
+            query = query.options(*[joinedload(option) for option in options])
+
 
         return query.all()
 

@@ -22,6 +22,7 @@ class ISession(Protocol, Generic[T]):
         order_by: Optional[List[Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        *args,
         **filters,
     ) -> List[T]: ...
 

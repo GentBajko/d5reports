@@ -1,15 +1,18 @@
 from typing import Optional
+
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import asc, desc
 
 from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
 from database.models import user_mapper  # noqa F401
+from core.models.task import Task
 from core.models.user import User
+from core.models.project import Project
 from backend.dependencies import get_session
 from backend.views.user_view import (
     get_user,
@@ -164,38 +167,80 @@ def get_all_users_endpoint(
 def get_user_projects_endpoint(
     request: Request,
     user_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    projects = get_project_by_user(session, user_id)
-    context = {
-        "request": request,
-        "headers": [
-            "Name",
-            "Email",
-            "Send Email",
-            "Archived",
-            "Developers",
-            "Tasks",
-        ],
-        "data": projects,
-        "entity": "user",
-    }
-    return templates.TemplateResponse("project/projects.html", context)
+    order_by = []
+    if sort:
+        sort_column = getattr(Project, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    projects, pagination = get_project_by_user(session, user_id, pagination)
+
+    return templates.TemplateResponse(
+        "project/projects.html",
+        {
+            "request": request,
+            "headers": [
+                "Name",
+                "Email",
+                "Send Email",
+                "Archived",
+                "Developers",
+                "Tasks",
+            ],
+            "data": projects,
+            "pagination": pagination,
+            "entity": "project",
+            "current_sort": sort,
+            "current_order": order,
+        },
+    )
 
 
 @user_router.get("/{user_id}/tasks", response_class=HTMLResponse)
 def get_user_tasks_endpoint(
     request: Request,
-    project_id: str,
+    user_id: str,  # Changed from project_id to user_id for consistency
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    tasks = get_user_tasks(session, project_id)
-    context = {
-        "request": request,
-        "headers": ["Title", "Hours Required", "Description", "Status"],
-        "data": tasks,
-        "entity": "task",
-    }
-    return templates.TemplateResponse("task/tasks.html", context)
+    order_by = []
+    if sort:
+        sort_column = getattr(Task, sort, None)  # Assuming Task is the model
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    tasks, pagination = get_user_tasks(session, user_id, pagination)
+
+    return templates.TemplateResponse(
+        "task/tasks.html",
+        {
+            "request": request,
+            "headers": ["Title", "Hours Required", "Description", "Status"],
+            "data": tasks,
+            "pagination": pagination,
+            "entity": "task",
+            "current_sort": sort,
+            "current_order": order,
+        },
+    )
