@@ -1,7 +1,7 @@
 from sqlalchemy import Table, Column, String, ForeignKey
 
-from src.core.models.project_user import ProjectUser
-from src.database.models.mapper import mapper_registry
+from database.models.mapper import mapper_registry
+from core.models.project_user import ProjectUser
 
 project_developers_table = Table(
     "project_developers",

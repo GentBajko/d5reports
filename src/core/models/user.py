@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from ulid import ULID
 
-from src.core.enums.premissions import Permissions
+from core.enums.premissions import Permissions
 
 if TYPE_CHECKING:
-    from src.core.models.task import Task
-    from src.core.models.project import Project
+    from core.models.task import Task
+    from core.models.project import Project
 
 
 class User:

@@ -3,10 +3,10 @@ from fastapi import Depends, Request, APIRouter
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from src.core.enums.premissions import Permissions
-from src.backend.dependencies import get_session
-from src.backend.views.user_view import get_all_users
-from src.database.interfaces.session import ISession
+from backend.dependencies import get_session
+from core.enums.premissions import Permissions
+from backend.views.user_view import get_all_users
+from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
 dashboard_router = APIRouter()

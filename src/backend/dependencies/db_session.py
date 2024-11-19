@@ -1,6 +1,6 @@
-from src.database.interfaces.session import ISession
-from src.database.sessions.sqlalchemy_session import SQLAlchemySession
-from src.database.adapters.mysql import MySQL
+from database.adapters.mysql import MySQL
+from database.interfaces.session import ISession
+from database.sessions.sqlalchemy_session import SQLAlchemySession
 
 
 async def get_session() -> ISession:

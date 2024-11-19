@@ -1,9 +1,9 @@
 from sqlalchemy import Table, Column, String, BigInteger
 from sqlalchemy.orm import relationship
 
-from src.core.models.user import User
-from src.database.models.mapper import mapper_registry
-from src.database.models.association_tables import project_developers_table
+from core.models.user import User
+from database.models.mapper import mapper_registry
+from database.models.association_tables import project_developers_table
 
 user_table = Table(
     "user",

@@ -1,30 +1,31 @@
+from ulid import ULID
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from ulid import ULID
 
-from src.backend.models import TaskCreateModel, TaskResponseModel
-from src.database.models import task_mapper  # noqa F401
-from src.core.models.user import User
-from src.backend.dependencies import get_session
-from src.backend.dependencies.auth import (
-    validate_csrf,
-    get_current_user,
-)
-from src.backend.views.task_view import (
+from backend.models import TaskCreateModel, TaskResponseModel
+from database.models import task_mapper  # noqa F401
+from core.models.user import User
+from backend.dependencies import get_session
+from backend.views.task_view import (
     get_task,
     create_task,
     update_task,
     upsert_task,
     get_all_tasks,
-    get_project_tasks,
     get_user_tasks,
+    get_project_tasks,
 )
-from src.database.interfaces.session import ISession
+from backend.dependencies.auth import (
+    validate_csrf,
+    get_current_user,
+)
+from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
 
 task_router = APIRouter(prefix="/task")
+
 
 @task_router.get("/create")
 def get_task_home(
@@ -51,8 +52,7 @@ async def create_task_endpoint(
     """
     Endpoint to create a new task.
     """
-    
-    
+
     task_data = TaskCreateModel(
         project_id=str(ULID()),
         project_name=project_name,
@@ -140,7 +140,8 @@ def get_all_tasks_endpoint(
         for task in tasks
     ]
     return templates.TemplateResponse(
-        "task/tasks.html", {"request": request, "headers": headers, "data": data}
+        "task/tasks.html",
+        {"request": request, "headers": headers, "data": data},
     )
 
 
@@ -166,7 +167,8 @@ def get_tasks_by_project_endpoint(
         for task in tasks
     ]
     return templates.TemplateResponse(
-        "task/tasks.html", {"request": request, "headers": headers, "data": data}
+        "task/tasks.html",
+        {"request": request, "headers": headers, "data": data},
     )
 
 

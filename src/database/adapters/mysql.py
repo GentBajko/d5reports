@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.config.env import ENV
+from config.env import ENV
 
 
 class MySQL:

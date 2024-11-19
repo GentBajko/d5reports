@@ -1,6 +1,6 @@
 from typing import Any, List, Type, Generic, TypeVar, Optional
 
-from src.database.interfaces.session import ISession
+from database.interfaces.session import ISession
 
 T = TypeVar("T")
 
@@ -29,4 +29,3 @@ class Repository(Generic[T]):
 
     def query(self, *args, **kwargs) -> List[T]:
         return self.session.query(self.model, *args, **kwargs)
-

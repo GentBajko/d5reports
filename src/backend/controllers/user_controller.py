@@ -2,14 +2,14 @@ from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from src.backend.models import (
+from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
-from src.database.models import user_mapper  # noqa F401
-from src.core.models.user import User
-from src.backend.dependencies import get_session
-from src.backend.views.user_view import (
+from database.models import user_mapper  # noqa F401
+from core.models.user import User
+from backend.dependencies import get_session
+from backend.views.user_view import (
     get_user,
     create_user,
     update_user,
@@ -19,12 +19,12 @@ from src.backend.views.user_view import (
     authenticate_user,
     get_project_by_user,
 )
-from src.backend.dependencies.auth import (
+from backend.dependencies.auth import (
     is_admin,
     validate_csrf,
     get_current_user,
 )
-from src.database.interfaces.session import ISession
+from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
 

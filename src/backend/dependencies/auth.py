@@ -1,10 +1,10 @@
 from fastapi import Depends, Request, HTTPException
 
-from src.core.models.user import User
-from src.core.enums.premissions import Permissions
-from src.database.interfaces.session import ISession
-from src.backend.dependencies.db_session import get_session
-from src.database.repositories.repository import Repository
+from core.models.user import User
+from core.enums.premissions import Permissions
+from database.interfaces.session import ISession
+from backend.dependencies.db_session import get_session
+from database.repositories.repository import Repository
 
 
 def get_current_user(

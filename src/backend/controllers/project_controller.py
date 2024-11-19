@@ -2,19 +2,19 @@ from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from src.backend.models import (
+from backend.models import (
     ProjectCreateModel,
     ProjectResponseModel,
 )
-from src.database.models import project_mapper  # noqa F401
-from src.core.models.user import User
-from src.backend.dependencies import get_session
-from src.backend.dependencies.auth import (
+from database.models import project_mapper  # noqa F401
+from core.models.user import User
+from backend.dependencies import get_session
+from backend.dependencies.auth import (
     is_admin,
     validate_csrf,
     get_current_user,
 )
-from src.backend.views.project_view import (
+from backend.views.project_view import (
     get_project,
     create_project,
     update_project,
@@ -25,7 +25,7 @@ from src.backend.views.project_view import (
     get_user_by_project,
     assign_project_to_user,
 )
-from src.database.interfaces.session import ISession
+from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
 
@@ -50,6 +50,7 @@ async def create_project_endpoint(
     )
     return create_project(project, session)
 
+
 @project_router.get("/options", response_class=HTMLResponse)
 def get_project_options(
     request: Request,
@@ -69,6 +70,7 @@ def get_project_options(
         options_html += f'<option value="{project.id}">{project.name}</option>'
 
     return HTMLResponse(content=options_html)
+
 
 @project_router.get("/{project_id}", response_class=HTMLResponse)
 def get_project_endpoint(

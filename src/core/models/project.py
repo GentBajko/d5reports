@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, List, Optional
 from ulid import ULID
 
 if TYPE_CHECKING:
-    from src.core.models.task import Task
-    from src.core.models.user import User
+    from core.models.task import Task
+    from core.models.user import User
 
 
 class Project:

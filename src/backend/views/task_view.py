@@ -1,12 +1,12 @@
 from typing import List
 
-from src.backend.utils.populate_fields import populate_task_fields
-from src.backend.models import TaskCreateModel, TaskResponseModel
-from src.database.models import task_mapper  # noqa F401
-from src.core.models.task import Task
-from src.core.models.project import Project
-from src.database.interfaces.session import ISession
-from src.database.repositories.repository import Repository
+from backend.models import TaskCreateModel, TaskResponseModel
+from database.models import task_mapper  # noqa F401
+from core.models.task import Task
+from core.models.project import Project
+from database.interfaces.session import ISession
+from backend.utils.populate_fields import populate_task_fields
+from database.repositories.repository import Repository
 
 
 def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
@@ -25,7 +25,7 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
 
         repo = Repository(s, Task)
         project_repo = Repository(s, Project)
-        
+
         project = project_repo.query(id=task.project_id)
 
         new_task = Task(

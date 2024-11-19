@@ -2,19 +2,19 @@ from typing import List
 
 from loguru import logger
 
-from src.backend.models import ProjectCreateModel, ProjectResponseModel
-from src.database.models import (
+from backend.models import ProjectCreateModel, ProjectResponseModel
+from database.models import (
     project_mapper,  # noqa F401
     project_developers_table,
 )
-from src.core.models.task import Task
-from src.core.models.user import User
-from src.core.models.project import Project
-from src.backend.models.models import TaskResponseModel, UserResponseModel
-from src.core.models.project_user import ProjectUser
-from src.database.interfaces.session import ISession
-from src.backend.utils.populate_fields import populate_project_fields
-from src.database.repositories.repository import Repository
+from core.models.task import Task
+from core.models.user import User
+from core.models.project import Project
+from backend.models.models import TaskResponseModel, UserResponseModel
+from core.models.project_user import ProjectUser
+from database.interfaces.session import ISession
+from backend.utils.populate_fields import populate_project_fields
+from database.repositories.repository import Repository
 
 
 def create_project(

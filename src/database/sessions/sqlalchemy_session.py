@@ -1,9 +1,11 @@
-from typing import Any, List, Optional, Type, TypeVar
+from typing import Any, List, Type, TypeVar, Optional
+
 from sqlalchemy.orm import Session
 
-from src.database.interfaces.session import ISession
+from database.interfaces.session import ISession
 
 T = TypeVar("T")
+
 
 class SQLAlchemySession(ISession):
     def __init__(self, session: Session):
@@ -33,12 +35,12 @@ class SQLAlchemySession(ISession):
 
     def query(self, model: Type[T], *args, **kwargs) -> List[T]:
         return self._session.query(model).filter_by(*args, **kwargs).all()
-    
+
     def execute(self, stmt: Any) -> None:
         self._session.execute(stmt)
 
     def __enter__(self) -> "SQLAlchemySession":
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self._session.close()

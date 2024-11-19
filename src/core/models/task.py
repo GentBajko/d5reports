@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, List, Optional
 
 from ulid import ULID
 
-from src.core.enums.task_status import TaskStatus
+from core.enums.task_status import TaskStatus
 
 if TYPE_CHECKING:
-    from src.core.models.task_log import TaskLog
+    from core.models.task_log import TaskLog
 
 
 class Task:

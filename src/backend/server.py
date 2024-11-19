@@ -6,12 +6,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.config.env import ENV
-from src.backend.controllers.task_controller import task_router
-from src.backend.controllers.user_controller import user_router
-from src.backend.controllers.project_controller import project_router
-from src.backend.controllers.dashboard_controller import dashboard_router
-from src.backend.controllers.healthcheck_controller import healthcheck_router
+from config.env import ENV
+from backend.controllers.task_controller import task_router
+from backend.controllers.user_controller import user_router
+from backend.controllers.project_controller import project_router
+from backend.controllers.dashboard_controller import dashboard_router
+from backend.controllers.healthcheck_controller import healthcheck_router
 
 app = FastAPI(title="Division5 Reports API", version="0.1.0")
 

@@ -3,23 +3,23 @@ from typing import List, Optional
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-from src.backend.models import (
+from backend.models import (
     UserCreateModel,
     UserResponseModel,
     ProjectResponseModel,
 )
-from src.database.models import user_mapper  # noqa F401
-from src.core.models.task import Task
-from src.core.models.user import User
-from src.core.models.project import Project
-from src.backend.models.models import TaskResponseModel
-from src.core.models.project_user import ProjectUser
-from src.database.interfaces.session import ISession
-from src.backend.utils.populate_fields import (
+from database.models import user_mapper  # noqa F401
+from core.models.task import Task
+from core.models.user import User
+from core.models.project import Project
+from backend.models.models import TaskResponseModel
+from core.models.project_user import ProjectUser
+from database.interfaces.session import ISession
+from backend.utils.populate_fields import (
     populate_project_fields,
     populate_developer_fields,
 )
-from src.database.repositories.repository import Repository
+from database.repositories.repository import Repository
 
 
 def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:

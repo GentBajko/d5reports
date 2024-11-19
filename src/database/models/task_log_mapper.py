@@ -1,8 +1,8 @@
 from sqlalchemy import Float, Table, Column, String, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship
 
-from src.core.models.task_log import TaskLog
-from src.database.models.mapper import mapper_registry
+from core.models.task_log import TaskLog
+from database.models.mapper import mapper_registry
 
 task_log_table = Table(
     "task_log",

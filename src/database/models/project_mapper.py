@@ -1,9 +1,9 @@
 from sqlalchemy import Table, Column, String, Boolean
 from sqlalchemy.orm import relationship
 
-from src.core.models.project import Project
-from src.database.models.mapper import mapper_registry
-from src.database.models.association_tables import project_developers_table
+from core.models.project import Project
+from database.models.mapper import mapper_registry
+from database.models.association_tables import project_developers_table
 
 project_table = Table(
     "project",
