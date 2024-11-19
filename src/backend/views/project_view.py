@@ -148,7 +148,6 @@ def get_users_projects(
 
     try:
         with session as s:
-            # Get project IDs from association table - fixed WHERE clause
             assoc = Repository(s, ProjectUser)
             result = assoc.query(user_id=user_id)
             print([row.project_id for row in result])

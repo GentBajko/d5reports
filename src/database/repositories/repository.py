@@ -27,5 +27,20 @@ class Repository(Generic[T]):
         self.session.delete(obj)
         self.session.commit()
 
-    def query(self, *args, **kwargs) -> List[T]:
-        return self.session.query(self.model, *args, **kwargs)
+    def query(
+        self,
+        order_by: Optional[List[Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        **filters,
+    ) -> List[T]:
+        return self.session.query(
+            self.model,
+            order_by=order_by,
+            limit=limit,
+            offset=offset,
+            **filters,
+        )
+
+    def count(self, **filters) -> int:
+        return self.session.count(self.model, **filters)

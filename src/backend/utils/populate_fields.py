@@ -40,13 +40,11 @@ def populate_task_fields(task_dict: dict) -> None:
     Args:
         task_dict: Dictionary containing task data
     """
-    # Populate basic task fields with defaults if missing
     task_dict.setdefault("title", task_dict.get("title", ""))
     task_dict.setdefault("description", task_dict.get("description", ""))
     task_dict.setdefault("hours_required", task_dict.get("hours_required", 0))
     task_dict.setdefault("status", task_dict.get("status", "Pending"))
 
-    # Populate logs if they exist
     logs = task_dict.get("logs", [])
     for log in logs:
         if isinstance(log, dict):
@@ -59,3 +57,31 @@ def populate_task_fields(task_dict: dict) -> None:
             log.setdefault("timestamp", log.get("timestamp", 0))
             log.setdefault("user_id", task_dict.get("user_id"))
             log.setdefault("task_id", task_dict.get("id"))
+
+
+def populate_fields(data):
+    if isinstance(data, dict):
+        if "email" in data and "full_name" in data:
+            populate_developer_fields(data)
+
+        if "projects" in data:
+            for project in data["projects"]:
+                populate_project_fields(project)
+                populate_fields(project)
+
+        if "developers" in data:
+            for developer in data["developers"]:
+                populate_developer_fields(developer)
+                populate_fields(developer)
+
+        if "tasks" in data:
+            for task in data["tasks"]:
+                populate_task_fields(task)
+                populate_fields(task)
+
+        if "logs" in data:
+            for log in data["logs"]:
+                populate_fields(log)
+    elif isinstance(data, list):
+        for item in data:
+            populate_fields(item)

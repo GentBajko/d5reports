@@ -22,7 +22,13 @@ content %}
     >
       {% for field in headers %} {% set key = field.lower().replace(" ", "_") %}
       <td class="w-1/{{ headers|length }} text-center py-3 px-4">
-        {% if field == 'Projects' %}
+        {% if field == 'Name' %}
+        <a
+          href="/user/{{ row['id'] }}"
+          class="text-[#0e5c6a] hover:underline"
+          >{{ row['full_name'] }}</a
+        >
+        {% elif field == 'Projects' %}
         <a
           href="/user/{{ row['id'] }}/projects"
           class="text-[#0e5c6a] hover:underline"
@@ -41,5 +47,7 @@ content %}
     {% endfor %}
   </tbody>
 </table>
+
+{% include "pagination.html" %}
 
 {% endblock %}

@@ -1,6 +1,8 @@
+from typing import Optional
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import asc, desc
 
 from backend.models import (
     UserCreateModel,
@@ -24,6 +26,7 @@ from backend.dependencies.auth import (
     validate_csrf,
     get_current_user,
 )
+from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
@@ -31,7 +34,7 @@ templates = Jinja2Templates(directory="src/backend/templates")
 user_router = APIRouter(prefix="/user")
 
 
-@user_router.get("/")
+@user_router.get("/create")
 def get_user_home(
     request: Request, current_user: User = Depends(get_current_user)
 ):
@@ -123,13 +126,37 @@ def upsert_user_endpoint(
 @user_router.get("/", response_class=HTMLResponse)
 def get_all_users_endpoint(
     request: Request,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    users = get_all_users(session)
+    order_by = []
+    if sort:
+        sort_column = getattr(User, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    users, pagination = get_all_users(session, pagination)
+
     return templates.TemplateResponse(
         "user/users.html",
-        {"request": request, "data": users, "entity": "user"},
+        {
+            "request": request,
+            "headers": ["Name", "Email", "Projects", "Tasks"],
+            "data": users,
+            "pagination": pagination,
+            "entity": "user",
+            "current_sort": sort,
+            "current_order": order,
+        },
     )
 
 

@@ -24,12 +24,12 @@ mapper_registry.map_imperatively(
         "task": relationship(
             "Task",
             back_populates="logs",
-            lazy="joined",
+            lazy="noload",
         ),
         "user": relationship(
             "User",
             back_populates="task_logs",
-            lazy="joined",
+            lazy="noload",
         ),
     },
 )

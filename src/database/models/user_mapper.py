@@ -24,19 +24,19 @@ mapper_registry.map_imperatively(
             "Project",
             secondary=project_developers_table,
             back_populates="developers",
-            lazy="joined",
+            lazy="selectin",
         ),
         "tasks": relationship(
             "Task",
             back_populates="user",
             cascade="all, delete-orphan",
-            lazy="joined",
+            lazy="selectin",
         ),
         "task_logs": relationship(
             "TaskLog",
             back_populates="user",
             cascade="all, delete-orphan",
-            lazy="joined",
+            lazy="selectin",
         ),
     },
 )

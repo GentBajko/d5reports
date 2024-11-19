@@ -1,4 +1,4 @@
-from typing import Type, Protocol
+from typing import Any, List, Optional, Type, Protocol
 
 
 class IRepository(Protocol):
@@ -26,3 +26,11 @@ class IRepository(Protocol):
     def delete(self, *args, **kwargs):
         """Deletes a record from the database."""
         ...
+
+    def query(
+        self,
+        order_by: Optional[List[Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        **filters,
+    ): ...

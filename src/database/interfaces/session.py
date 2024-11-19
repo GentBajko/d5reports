@@ -16,9 +16,18 @@ class ISession(Protocol, Generic[T]):
 
     def rollback(self) -> None: ...
 
-    def query(self, model: Type[T], *args, **kwargs) -> List[T]: ...
-    
+    def query(
+        self,
+        model: Type[T],
+        order_by: Optional[List[Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        **filters,
+    ) -> List[T]: ...
+
     def execute(self, stmt: Any) -> None: ...
+
+    def count(self, model: Type[T], **filters) -> int: ...
 
     def __enter__(self) -> "ISession": ...
 

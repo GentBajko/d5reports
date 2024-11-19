@@ -23,13 +23,13 @@ mapper_registry.map_imperatively(
             "User",
             secondary=project_developers_table,
             back_populates="projects",
-            lazy="joined",
+            lazy="noload",
         ),
         "tasks": relationship(
             "Task",
             back_populates="project",
             cascade="all, delete-orphan",
-            lazy="joined",
+            lazy="noload",
         ),
     },
 )

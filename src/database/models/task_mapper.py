@@ -25,18 +25,18 @@ mapper_registry.map_imperatively(
         "project": relationship(
             "Project",
             back_populates="tasks",
-            lazy="joined",
+            lazy="noload",
         ),
         "user": relationship(
             "User",
             back_populates="tasks",
-            lazy="joined",
+            lazy="noload",
         ),
         "logs": relationship(
             "TaskLog",
             back_populates="task",
             cascade="all, delete-orphan",
-            lazy="joined",
+            lazy="noload",
         ),
     },
 )
