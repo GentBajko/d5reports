@@ -73,6 +73,7 @@ while len(project_users) < 100:
         seen_pairs.add(pair)
         project_users.append(
             ProjectUser(
+                id=str(ULID()),
                 project_id=project_id,
                 user_id=user_id,
             )

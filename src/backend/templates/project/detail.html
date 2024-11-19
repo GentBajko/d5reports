@@ -4,20 +4,29 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
-    <h1 class="text-2xl mb-4">User Detail</h1>
-    <p><strong>Email:</strong> {{ project.email }}</p>
-    <p><strong>Full Name:</strong> {{ project.full_name }}</p>
-    <p><strong>Permissions:</strong> {{ project.permissions }}</p>
-    <p><strong>Developers:</strong></p>
-    <ul>
-    {% for developer in project.developers %}
-        <li>{{ developer.full_name }}</li>
-    {% endfor %}
-    </ul>
-    <ul>
-        {% for task in project.tasks %}
-            <li>{{ task.title }}</li>
-        {% endfor %}
-    </ul>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl">Project Details</h1>
+        <a
+          href="/project/{{ project.id }}/assign"
+          class="text-sm text-[#0e5c6a] hover:underline"
+          title="Assign Project to a Developer"
+        >
+          Assign to User
+        </a>
+    </div>
+    <p><strong>Email: </strong> {{ project.email }}</p>
+    <p><strong>Name: </strong> {{ project.name }}</p>
+    <p>
+      <strong>Developers: </strong>
+      <a href="/project/{{ project.id }}/users" class="text-[#0e5c6a] hover:underline">
+        {{ project.developers|length }} {{ "Developer" if project.developers|length == 1 else "Developers" }}
+      </a>
+    </p>
+    <p>
+      <strong>Tasks: </strong>
+      <a href="/project/{{ project.id }}/tasks" class="text-[#0e5c6a] hover:underline">
+        {{ project.tasks|length }} {{ "Task" if project.tasks|length == 1 else "Tasks" }}
+      </a>
+    </p>
 </div>
 {% endblock %}

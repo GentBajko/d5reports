@@ -35,7 +35,13 @@ class Project:
             visited = set()
 
         if id(self) in visited:
-            return {"id": self.id}
+            return {
+                "id": self.id,
+                "name": self.name,
+                "email": self.email,
+                "send_email": self.send_email,
+                "archived": self.archived,
+            }
 
         visited.add(id(self))
 

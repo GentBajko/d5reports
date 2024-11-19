@@ -39,23 +39,38 @@ templates = Jinja2Templates(directory="src/backend/templates")
 project_router = APIRouter(prefix="/project")
 
 
+@project_router.get("/create", response_class=HTMLResponse)
+def create_project_page(
+    request: Request, current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    return templates.TemplateResponse(
+        "project/create.html", {"request": request}
+    )
+
+
 @project_router.post("/")
 async def create_project_endpoint(
     request: Request,
     name: str = Form(...),
     email: str = Form(...),
     send_email: bool = Form(...),
-    archived: bool = Form(...),
     session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     csrf_protect=Depends(validate_csrf),
 ):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
     project = ProjectCreateModel(
         name=name,
         email=email,
         send_email=send_email,
-        archived=archived,
     )
-    return create_project(project, session)
+    project = create_project(project, session)
+    return templates.TemplateResponse(
+        "project/detail.html", {"request": request, "project": project}
+    )
 
 
 @project_router.get("/options", response_class=HTMLResponse)
@@ -92,15 +107,14 @@ def get_project_endpoint(
 ):
     project = get_project(session, id=project_id)
     pagination = calculate_pagination(total=0, page=1, per_page=15)
-    if not is_admin(current_user) and project_id not in [
-        project.id
-        for project in get_users_projects(
-            current_user.id, session, pagination
-        )[0]
-    ]:
+    user_projects = get_users_projects(current_user.id, session, pagination)
+    project_ids = [project.id for project in user_projects[0]]
+
+    if not is_admin(current_user) and project_id not in project_ids:
         raise HTTPException(status_code=403, detail="Access forbidden")
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+
     return templates.TemplateResponse(
         "project/detail.html", {"request": request, "project": project}
     )
@@ -179,15 +193,36 @@ def get_all_projects_endpoint(
     )
 
 
+@project_router.get("/{project_id}/assign", response_class=HTMLResponse)
+def assign_project_to_user_page(
+    request: Request,
+    project_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    project = get_project(session, id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return templates.TemplateResponse(
+        "project/assign.html", {"request": request, "project": project}
+    )
+
+
 @project_router.post(
-    "/{project_id}/assign_user", response_model=ProjectResponseModel
+    "/{project_id}/assign", response_model=ProjectResponseModel
 )
 def assign_project_to_user_endpoint(
+    request: Request,
     project_id: str,
     user_id: str = Form(...),
     session: ISession = Depends(get_session),
 ):
-    return assign_project_to_user(project_id, user_id, session)
+    assignment = assign_project_to_user(project_id, user_id, session)
+    return templates.TemplateResponse(
+        "project/detail.html", {"project": assignment, "request": request}
+    )
 
 
 @project_router.get("/{project_id}/users", response_class=HTMLResponse)

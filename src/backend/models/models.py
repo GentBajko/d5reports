@@ -53,7 +53,7 @@ class ProjectCreateModel(BaseModel):
     name: str
     email: EmailStr
     send_email: bool
-    archived: bool
+    archived: bool = False
 
 
 class ProjectResponseModel(BaseModel):
@@ -62,10 +62,8 @@ class ProjectResponseModel(BaseModel):
     email: EmailStr
     send_email: bool
     archived: bool
-    developers: Union[List["UserResponseModel"], str] = Field(
-        default_factory=list
-    )
-    tasks: Union[List[TaskResponseModel], str] = Field(default_factory=list)
+    developers: List["UserResponseModel"] = Field(default_factory=list)
+    tasks: List[TaskResponseModel] = Field(default_factory=list)
 
 
 class UserCreateModel(BaseModel):
@@ -80,10 +78,16 @@ class UserResponseModel(BaseModel):
     email: EmailStr
     full_name: str
     permissions: int
-    tasks: Optional[List[TaskResponseModel]] = Field(default=None)
-    projects: Optional[List[ProjectResponseModel]] = Field(default=None)
+    tasks: List[TaskResponseModel] = Field(default_factory=list)
+    projects: List["ProjectResponseModel"] = Field(default_factory=list)
 
 
 class UserLoginModel(BaseModel):
     email: str
     password: str
+
+
+UserResponseModel.model_rebuild()
+ProjectResponseModel.model_rebuild()
+TaskResponseModel.model_rebuild()
+LogResponseModel.model_rebuild()

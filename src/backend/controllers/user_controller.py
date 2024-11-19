@@ -97,6 +97,36 @@ async def logout(
     return RedirectResponse(url="/user/login", status_code=302)
 
 
+@user_router.get("/options", response_class=HTMLResponse)
+def get_user_options(
+    request: Request,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 300,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    order_by = []
+    if sort:
+        sort_column = getattr(User, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    users, pagination = get_all_users(session, pagination)
+
+    html_options = [
+        f'<option value="{user.id}">{user.full_name}</option>'
+        for user in users
+    ]
+    return HTMLResponse("\n".join(html_options))
+
+
 @user_router.get("/{user_id}", response_class=HTMLResponse)
 def get_user_endpoint(
     request: Request, user_id: str, session: ISession = Depends(get_session)

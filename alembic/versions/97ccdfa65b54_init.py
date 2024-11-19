@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 2cb6659531f8
+Revision ID: 97ccdfa65b54
 Revises: 
-Create Date: 2024-11-18 23:46:22.414026
+Create Date: 2024-11-19 17:47:15.826792
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2cb6659531f8'
+revision: str = '97ccdfa65b54'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,17 +37,20 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('project_developers',
+    sa.Column('id', sa.String(length=26), nullable=False),
     sa.Column('user_id', sa.String(length=26), nullable=False),
     sa.Column('project_id', sa.String(length=26), nullable=False),
     sa.ForeignKeyConstraint(['project_id'], ['project.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'project_id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'project_id', name='uix_user_project')
     )
     op.create_table('task',
     sa.Column('id', sa.String(length=26), nullable=False),
     sa.Column('project_id', sa.String(length=26), nullable=False),
     sa.Column('project_name', sa.String(length=100), nullable=False),
     sa.Column('user_id', sa.String(length=26), nullable=False),
+    sa.Column('user_name', sa.String(length=100), nullable=False),
     sa.Column('title', sa.String(length=100), nullable=False),
     sa.Column('hours_required', sa.Float(), nullable=False),
     sa.Column('description', sa.String(length=255), nullable=True),

@@ -211,6 +211,9 @@ def get_all_users(
             page=pagination.current_page or 1,
             per_page=pagination.limit or 10,
         )
+        
+        if total == 0:
+            return [], pagination
 
         query = repository.query(
             order_by=pagination.order_by,

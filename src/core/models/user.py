@@ -41,7 +41,12 @@ class User:
             visited = set()
 
         if id(self) in visited:
-            return {"id": self.id}
+            return {
+                "id": self.id,
+                "email": self.email,
+                "full_name": self.full_name,
+                "permissions": self.permissions,
+            }
 
         visited.add(id(self))
 

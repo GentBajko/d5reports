@@ -50,7 +50,18 @@ class Task:
             visited = set()
 
         if id(self) in visited:
-            return {"id": self.id}
+            return {
+                "id": self.id,
+                "project_id": self.project_id,
+                "project_name": self.project_name,
+                "user_id": self.user_id,
+                "user_name": self.user_name,
+                "title": self.title,
+                "hours_required": self.hours_required,
+                "description": self.description,
+                "status": self.status,
+                "logs": [],
+            }
 
         visited.add(id(self))
 

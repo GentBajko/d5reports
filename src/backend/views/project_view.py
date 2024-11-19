@@ -1,11 +1,12 @@
 from typing import List, Tuple
 
+from ulid import ULID
 from loguru import logger
 
 from backend.models import ProjectCreateModel, ProjectResponseModel
 from database.models import (
     project_mapper,  # noqa F401
-    project_developers_table,
+    project_developers_table,  # noqa F401
 )
 from core.models.task import Task
 from core.models.user import User
@@ -15,7 +16,7 @@ from backend.utils.pagination import calculate_pagination
 from core.models.project_user import ProjectUser
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
-from backend.utils.populate_fields import populate_project_fields
+from backend.utils.populate_fields import populate_fields, populate_project_fields
 from database.repositories.repository import Repository
 
 
@@ -48,14 +49,16 @@ def get_project(session: ISession, **kwargs) -> ProjectResponseModel:
     ProjectResponseModel.model_rebuild()
     with session as s:
         repository = Repository(s, Project)
-        print(kwargs)
-        project = repository.query(**kwargs) if kwargs else repository.query()
+        project = repository.query(
+            **kwargs,
+            options=[Project.developers, Project.tasks],  # type: ignore
+        )
 
         if not project:
             raise ValueError("Project not found")
 
         project_dict = project[0].to_dict()
-        populate_project_fields(project_dict)
+        populate_fields(project_dict)
     return ProjectResponseModel.model_validate(project_dict)
 
 
@@ -267,19 +270,20 @@ def assign_project_to_user(
     with session as s:
         project = Repository(s, Project).get(project_id)
         user = Repository(s, User).get(user_id)
+        project_user = Repository(s, ProjectUser)
 
         if not project:
             raise ValueError(f"Project with id {project_id} does not exist.")
         if not user:
             raise ValueError(f"User with id {user_id} does not exist.")
 
-        stmt = project_developers_table.insert().values(
-            project_id=project_id, user_id=user_id
+        project_user.create(
+            ProjectUser(id=str(ULID()), project_id=project_id, user_id=user_id)
         )
-        s.execute(stmt)
-        s.commit()
 
-    return ProjectResponseModel.model_validate(project.to_dict())
+        project_dict = project.to_dict()
+
+    return ProjectResponseModel.model_validate(project_dict)
 
 
 def get_user_by_project(

@@ -1,11 +1,11 @@
 from typing import List, Tuple
 
 from backend.models import TaskCreateModel, TaskResponseModel
-from backend.models.pagination import Pagination
-from backend.utils.pagination import calculate_pagination
 from database.models import task_mapper  # noqa F401
 from core.models.task import Task
 from core.models.project import Project
+from backend.utils.pagination import calculate_pagination
+from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
 from backend.utils.populate_fields import populate_task_fields
 from database.repositories.repository import Repository
@@ -58,7 +58,7 @@ def get_task(session: ISession, **kwargs) -> TaskResponseModel:
         repo = Repository[Task](s, Task)
         project_repo = Repository(s, Project)
 
-        task = repo.query(**kwargs)
+        task = repo.query(**kwargs, options=[Task.logs])  # type: ignore
         if not task:
             raise ValueError("Task not found")
         task_obj = task[0]
