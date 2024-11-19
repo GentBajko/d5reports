@@ -29,6 +29,7 @@ class TaskCreateModel(BaseModel):
     project_id: str
     project_name: str
     user_id: str
+    user_name: str
     title: str
     hours_required: float
     description: str
@@ -40,6 +41,7 @@ class TaskResponseModel(BaseModel):
     project_id: str
     project_name: str
     user_id: str
+    user_name: str
     title: str
     hours_required: float
     description: str

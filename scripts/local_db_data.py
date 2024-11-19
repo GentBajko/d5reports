@@ -2,6 +2,7 @@ from random import choice
 from datetime import datetime
 
 from ulid import ULID
+from argon2 import PasswordHasher
 
 from database.models import (  # noqa F401
     task_mapper,
@@ -21,12 +22,15 @@ from core.models.project_user import ProjectUser
 from database.repositories.repository import Repository
 from database.sessions.sqlalchemy_session import SQLAlchemySession
 
+ph = PasswordHasher()
+hashed_password = ph.hash("password")
+
 users = [
     User(
         id=str(ULID()),
         full_name=f"John Doe{i}",
         email=f"john.doe{i}@mail.com",
-        password="password",
+        password=hashed_password,
         permissions=Permissions.DEVELOPER.value,
         projects=[],
         tasks=[],
@@ -38,7 +42,7 @@ users.append(
         id=str(ULID()),
         full_name="Jane Doe",
         email="jane.doe@mail.com",
-        password="password",
+        password=hashed_password,
         permissions=Permissions.ADMIN.value,
         projects=[],
         tasks=[],
@@ -58,22 +62,32 @@ projects = [
     for i in range(10)
 ]
 
-project_users = [
-    ProjectUser(
-        project_id=choice(projects).id,
-        user_id=choice(users).id,
-    )
-    for _ in range(100)
-]
+seen_pairs = set()
+project_users = []
+while len(project_users) < 100:
+    project_id = choice(projects).id
+    user_id = choice(users).id
+    pair = (project_id, user_id)
+    
+    if pair not in seen_pairs:
+        seen_pairs.add(pair)
+        project_users.append(
+            ProjectUser(
+                project_id=project_id,
+                user_id=user_id,
+            )
+        )
 
 tasks = []
 for i in range(100):
     project = choice(projects)
+    user = choice(users)
     task = Task(
         id=str(ULID()),
         project_id=project.id,
         project_name=project.name,
-        user_id=choice(users).id,
+        user_id=user.id,
+        user_name=user.full_name,
         title=f"Task {i}",
         hours_required=i + 1,
         description=f"Task {i} description",
@@ -102,6 +116,8 @@ with SQLAlchemySession(MySQL.session()) as s:
     project_repo = Repository(s, Project)
     task_repo = Repository(s, Task)
     log_repo = Repository(s, TaskLog)
+    
+    project_user_table = Repository(s, ProjectUser)
 
     for user in users:
         user_repo.create(user)
@@ -111,3 +127,5 @@ with SQLAlchemySession(MySQL.session()) as s:
         task_repo.create(task)
     for log in logs:
         log_repo.create(log)
+    for project_user in project_users:
+        project_user_table.create(project_user)

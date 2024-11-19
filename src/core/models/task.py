@@ -14,6 +14,7 @@ class Task:
         project_id: str,
         project_name: str,
         user_id: str,
+        user_name: str,
         title: str,
         hours_required: float,
         description: str,
@@ -25,6 +26,7 @@ class Task:
         self.project_id = project_id
         self.project_name = project_name
         self.user_id = user_id
+        self.user_name = user_name
         self.title = title
         self.hours_required = hours_required
         self.description = description
@@ -57,6 +59,7 @@ class Task:
             "project_id": self.project_id,
             "project_name": self.project_name,
             "user_id": self.user_id,
+            "user_name": self.user_name,
             "title": self.title,
             "hours_required": self.hours_required,
             "description": self.description,
@@ -73,6 +76,7 @@ class Task:
             project_id=data["project_id"],
             project_name=data["project_name"],
             user_id=data["user_id"],
+            user_name=data["user_name"],
             title=data["title"],
             hours_required=data["hours_required"],
             description=data["description"],

@@ -1,4 +1,6 @@
+from typing import Union
 from fastapi import Depends, Request, HTTPException
+from fastapi.responses import RedirectResponse
 
 from core.models.user import User
 from core.enums.premissions import Permissions
@@ -9,10 +11,10 @@ from database.repositories.repository import Repository
 
 def get_current_user(
     request: Request, session: ISession = Depends(get_session)
-) -> User:
+) -> Union[User, RedirectResponse]:
     user_id = request.session.get("user_id")
     if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return RedirectResponse("/user/login")
     with session as s:
         repository = Repository(s, User)
         user = repository.get(user_id)

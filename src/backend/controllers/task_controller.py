@@ -57,6 +57,7 @@ async def create_task_endpoint(
         project_id=str(ULID()),
         project_name=project_name,
         user_id=current_user.id,
+        user_name=current_user.full_name,
         title=title,
         hours_required=hours_required,
         description=description,
@@ -133,8 +134,10 @@ def get_all_tasks_endpoint(
         {
             "id": task.id,
             "title": task.title,
+            "project_id": task.project_id,
             "project_name": task.project_name,
             "user_id": task.user_id,
+            "user_name": task.user_name,
             "status": task.status,
         }
         for task in tasks
@@ -161,7 +164,7 @@ def get_tasks_by_project_endpoint(
         {
             "id": task.id,
             "title": task.title,
-            "user_id": task.user_id,
+            "user_name": task.user_id,
             "status": task.status,
         }
         for task in tasks

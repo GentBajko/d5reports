@@ -11,6 +11,7 @@ task_table = Table(
     Column("project_id", String(26), ForeignKey("project.id"), nullable=False),
     Column("project_name", String(100), nullable=False),
     Column("user_id", String(26), ForeignKey("user.id"), nullable=False),
+    Column("user_name", String(100), nullable=False),
     Column("title", String(100), nullable=False),
     Column("hours_required", Float, nullable=False),
     Column("description", String(255), nullable=True),
