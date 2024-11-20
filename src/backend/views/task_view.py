@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Tuple
 
 from backend.models import TaskCreateModel, TaskResponseModel
@@ -7,7 +8,6 @@ from core.models.project import Project
 from backend.utils.pagination import calculate_pagination
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
-from backend.utils.populate_fields import populate_task_fields
 from database.repositories.repository import Repository
 
 
@@ -15,8 +15,6 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
     """
     Create a new task in the database.
     """
-    TaskResponseModel.model_rebuild()
-
     with session as s:
         project_repo = Repository(s, Project)
 
@@ -39,6 +37,7 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
             hours_required=task.hours_required,
             description=task.description,
             status=task.status,
+            timestamp=int(datetime.datetime.now().timestamp()),
             logs=[],
         )
 
@@ -53,7 +52,6 @@ def get_task(session: ISession, **kwargs) -> TaskResponseModel:
     """
     Retrieve a single task from the database based on provided criteria.
     """
-    TaskResponseModel.model_rebuild()
     with session as s:
         repo = Repository[Task](s, Task)
         project_repo = Repository(s, Project)
@@ -74,9 +72,6 @@ def update_task(
     """
     Update an existing task's information.
     """
-    TaskResponseModel.model_rebuild()
-    TaskCreateModel.model_rebuild()
-
     with session as s:
         repo = Repository[Task](s, Task)
         task = repo.get(id=task_id)
@@ -97,8 +92,6 @@ def upsert_task(
     """
     Insert a new task or update an existing task based on unique constraints.
     """
-    TaskResponseModel.model_rebuild()
-
     with session as s:
         repo = Repository[Task](s, Task)
         project_repo = Repository(s, Project)
@@ -119,6 +112,7 @@ def upsert_task(
                 hours_required=task.hours_required,
                 description=task.description,
                 status=task.status,
+                timestamp=int(datetime.datetime.now().timestamp()),
                 logs=[],
             )
             repo.create(new_task)
@@ -130,17 +124,18 @@ def upsert_task(
 def get_all_tasks(
     session: ISession, pagination: Pagination, **kwargs
 ) -> Tuple[List[TaskResponseModel], Pagination]:
-    TaskResponseModel.model_rebuild()
-
     with session as s:
         repo = Repository(s, Task)
         total = repo.count(**kwargs)
+
+        order_by = pagination.order_by
 
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
             per_page=pagination.limit or 15,
         )
+        pagination.order_by = order_by
 
         if total == 0:
             return [], pagination
@@ -149,15 +144,12 @@ def get_all_tasks(
             order_by=pagination.order_by,
             limit=pagination.limit,
             offset=pagination.offset,
+            options=[Task.logs],  # type: ignore
             **kwargs,
         )
 
-        task_dicts = [task.to_dict() for task in tasks]
-        for task_dict in task_dicts:
-            populate_task_fields(task_dict)
-
         tasks_list = [
-            TaskResponseModel.model_validate(task) for task in task_dicts
+            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
         ]
 
     return tasks_list, pagination
@@ -166,17 +158,19 @@ def get_all_tasks(
 def get_project_tasks(
     session: ISession, project_id: str, pagination: Pagination, **kwargs
 ) -> Tuple[List[TaskResponseModel], Pagination]:
-    TaskResponseModel.model_rebuild()
-
     with session as s:
         repo = Repository(s, Task)
         total = repo.count(project_id=project_id, **kwargs)
+
+        order_by = pagination.order_by
 
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
             per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         if total == 0:
             return [], pagination
@@ -186,15 +180,12 @@ def get_project_tasks(
             order_by=pagination.order_by,
             limit=pagination.limit,
             offset=pagination.offset,
+            options=[Task.logs],  # type: ignore
             **kwargs,
         )
 
-        task_dicts = [task.to_dict() for task in tasks]
-        for task_dict in task_dicts:
-            populate_task_fields(task_dict)
-
         tasks_list = [
-            TaskResponseModel.model_validate(task) for task in task_dicts
+            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
         ]
 
     return tasks_list, pagination
@@ -203,17 +194,19 @@ def get_project_tasks(
 def get_user_tasks(
     session: ISession, user_id: str, pagination: Pagination, **kwargs
 ) -> Tuple[List[TaskResponseModel], Pagination]:
-    TaskResponseModel.model_rebuild()
-
     with session as s:
         repo = Repository(s, Task)
         total = repo.count(user_id=user_id, **kwargs)
+
+        order_by = pagination.order_by
 
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
             per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         if total == 0:
             return [], pagination
@@ -223,15 +216,12 @@ def get_user_tasks(
             order_by=pagination.order_by,
             limit=pagination.limit,
             offset=pagination.offset,
+            options=[Task.logs],  # type: ignore
             **kwargs,
         )
 
-        task_dicts = [task.to_dict() for task in tasks]
-        for task_dict in task_dicts:
-            populate_task_fields(task_dict)
-
         tasks_list = [
-            TaskResponseModel.model_validate(task) for task in task_dicts
+            TaskResponseModel.model_validate(task.to_dict()) for task in tasks
         ]
 
     return tasks_list, pagination

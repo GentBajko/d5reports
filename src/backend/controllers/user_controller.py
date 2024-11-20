@@ -45,6 +45,12 @@ def get_user_home(
         raise HTTPException(status_code=401, detail="Access forbidden")
     return templates.TemplateResponse("user/create.html", {"request": request})
 
+@user_router.get("/is_admin", response_model=bool)
+def is_admin_endpoint(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    return is_admin(current_user)
 
 @user_router.post("/")
 async def create_user_endpoint(
@@ -241,7 +247,7 @@ def get_user_projects_endpoint(
 @user_router.get("/{user_id}/tasks", response_class=HTMLResponse)
 def get_user_tasks_endpoint(
     request: Request,
-    user_id: str,  # Changed from project_id to user_id for consistency
+    user_id: str,
     page: int = 1,
     sort: Optional[str] = None,
     order: Optional[str] = None,
@@ -251,7 +257,7 @@ def get_user_tasks_endpoint(
 ):
     order_by = []
     if sort:
-        sort_column = getattr(Task, sort, None)  # Assuming Task is the model
+        sort_column = getattr(Task, sort, None)
         if sort_column:
             if order and order.lower() == "desc":
                 order_by.append(desc(sort_column))

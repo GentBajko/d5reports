@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 
+{% import "macros.html" as macros %}
+
 {% block title %}Project List{% endblock %}
 
 {% block content %}
 
 <h1 class="text-2xl mb-4 flex items-center">
     Projects
-    <a href="/project/create" class="ml-4 text-[#0e5c6a] hover:underline" title="Create Task">
-        <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-        </svg>
-    </a>
+    {{ macros.svg_link("/project/create") }}
 </h1>
 
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">

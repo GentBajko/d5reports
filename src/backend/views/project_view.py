@@ -16,7 +16,6 @@ from backend.utils.pagination import calculate_pagination
 from core.models.project_user import ProjectUser
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
-from backend.utils.populate_fields import populate_fields, populate_project_fields
 from database.repositories.repository import Repository
 
 
@@ -26,7 +25,6 @@ def create_project(
     """
     Create a new project in the database.
     """
-    ProjectResponseModel.model_rebuild()
     new_project = Project(
         name=project.name,
         email=project.email,
@@ -46,7 +44,6 @@ def get_project(session: ISession, **kwargs) -> ProjectResponseModel:
     """
     Retrieve a single project from the database based on provided criteria.
     """
-    ProjectResponseModel.model_rebuild()
     with session as s:
         repository = Repository(s, Project)
         project = repository.query(
@@ -58,7 +55,7 @@ def get_project(session: ISession, **kwargs) -> ProjectResponseModel:
             raise ValueError("Project not found")
 
         project_dict = project[0].to_dict()
-        populate_fields(project_dict)
+
     return ProjectResponseModel.model_validate(project_dict)
 
 
@@ -68,9 +65,6 @@ def update_project(
     """
     Update an existing project's information.
     """
-    ProjectResponseModel.model_rebuild()
-    ProjectCreateModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, Project)
         existing_project = repository.get(project_id)
@@ -94,8 +88,6 @@ def upsert_project(
     """
     Insert a new project or update an existing project based on unique constraints.
     """
-    ProjectResponseModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, Project)
         existing_project = repository.query(name=project.name)
@@ -138,19 +130,21 @@ def get_all_projects(
         Tuple[List[ProjectResponseModel], Pagination]: A tuple containing the list of validated response models
                                                         representing the projects and the pagination info.
     """
-    ProjectResponseModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, Project)
 
         # Calculate the total number of projects matching the filters
         total = repository.count(**kwargs)
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         if total == 0:
             return [], pagination
@@ -167,12 +161,6 @@ def get_all_projects(
             return [], pagination
 
         project_dicts = [project.to_dict() for project in projects]
-
-        for project in project_dicts:
-            project["developers"] = str(len(project.get("developers", [])))
-            project["tasks"] = str(len(project.get("tasks", [])))
-
-            populate_project_fields(project)
 
     output = [
         ProjectResponseModel.model_validate(proj_dict)
@@ -207,19 +195,22 @@ def get_users_projects(
     Raises:
         Exception: If an error occurs during the retrieval process.
     """
-    ProjectResponseModel.model_rebuild()
-
     try:
         with session as s:
             assoc_repo = Repository(s, ProjectUser)
 
             total = assoc_repo.count(user_id=user_id, **kwargs)
 
+
+            order_by = pagination.order_by
+
             pagination = calculate_pagination(
                 total=total,
                 page=pagination.current_page or 1,
-                per_page=pagination.limit or 10,
+                per_page=pagination.limit or 15,
             )
+
+            pagination.order_by = order_by
 
             if total == 0:
                 return [], pagination
@@ -248,8 +239,6 @@ def get_users_projects(
                 return [], pagination
 
             project_dicts = [project.to_dict() for project in projects]
-            for project in project_dicts:
-                populate_project_fields(project)
 
         output = [
             ProjectResponseModel.model_validate(proj_dict)
@@ -266,7 +255,6 @@ def get_users_projects(
 def assign_project_to_user(
     project_id: str, user_id: str, session: ISession
 ) -> ProjectResponseModel:
-    ProjectResponseModel.model_rebuild()
     with session as s:
         project = Repository(s, Project).get(project_id)
         user = Repository(s, User).get(user_id)
@@ -309,9 +297,6 @@ def get_user_by_project(
     Raises:
         IndexError: If no users are associated with the specified project.
     """
-    UserResponseModel.model_rebuild()
-    ProjectResponseModel.model_rebuild()
-
     with session as s:
         assoc_repo = Repository(s, ProjectUser)
         total = assoc_repo.count(project_id=project_id, **kwargs)
@@ -321,11 +306,15 @@ def get_user_by_project(
                 total=0, page=1, per_page=pagination.limit or 10
             )
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         result = assoc_repo.query(
             project_id=project_id,
@@ -348,21 +337,7 @@ def get_user_by_project(
 
         user_dicts = [user.to_dict() for user in users]
 
-    output = []
-    for user_dict in user_dicts:
-        for project in user_dict.get("projects", []):
-            if isinstance(project, dict):
-                for developer in project.get("developers", []):
-                    if isinstance(developer, dict):
-                        developer.setdefault("email", user_dict.get("email"))
-                        developer.setdefault(
-                            "full_name", user_dict.get("full_name")
-                        )
-                        developer.setdefault("tasks", project.get("tasks", []))
-                        developer.setdefault(
-                            "permissions", user_dict.get("permissions")
-                        )
-        output.append(UserResponseModel.model_validate(user_dict))
+    output = [UserResponseModel.model_validate(user_dict) for user_dict in user_dicts]
 
     return output, pagination
 
@@ -390,9 +365,6 @@ def get_project_tasks(
     Raises:
         IndexError: If no tasks are associated with the specified project.
     """
-    TaskResponseModel.model_rebuild()
-    ProjectResponseModel.model_rebuild()
-
     with session as s:
         task_repo = Repository(s, Task)
         total = task_repo.count(project_id=project_id, **kwargs)
@@ -402,11 +374,15 @@ def get_project_tasks(
                 total=0, page=1, per_page=pagination.limit or 10
             )
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         tasks = task_repo.query(
             project_id=project_id,
@@ -421,12 +397,6 @@ def get_project_tasks(
 
         task_dicts = [task.to_dict() for task in tasks]
 
-    output = []
-    for task_dict in task_dicts:
-        for project in task_dict.get("project", []):
-            if isinstance(project, dict):
-                project.setdefault("tasks", [])
-                project["tasks"].append(task_dict)
-        output.append(TaskResponseModel.model_validate(task_dict))
+    output = [TaskResponseModel.model_validate(task_dict) for task_dict in task_dicts]
 
     return output, pagination

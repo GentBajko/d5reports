@@ -17,11 +17,6 @@ from backend.utils.pagination import calculate_pagination
 from core.models.project_user import ProjectUser
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
-from backend.utils.populate_fields import (
-    populate_fields,
-    populate_project_fields,
-    populate_developer_fields,
-)
 from database.repositories.repository import Repository
 
 
@@ -40,7 +35,6 @@ def create_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
     Returns:
         UserResponseModel: A validated response model representing the newly created user.
     """
-    UserResponseModel.model_rebuild()
     ph = PasswordHasher()
     hashed_password = ph.hash(user.password)
     new_user = User(
@@ -93,20 +87,10 @@ def get_user(session: ISession, **kwargs) -> UserResponseModel:
     Raises:
         IndexError: If no user matches the provided criteria.
     """
-    ProjectResponseModel.model_rebuild()
-    UserResponseModel.model_rebuild()
     with session as s:
         repository = Repository(s, User)
         user = repository.query(**kwargs)[0]
         user_dict = user.to_dict()
-
-    for project in user_dict.get("projects", []):
-        if isinstance(project, dict):
-            for developer in project.get("developers", []):
-                if isinstance(developer, dict):
-                    developer.setdefault("email", user.email)
-                    developer.setdefault("full_name", user.full_name)
-                    developer.setdefault("tasks", project.get("tasks", []))
 
     return UserResponseModel.model_validate(user_dict)
 
@@ -132,9 +116,6 @@ def update_user(
     Raises:
         ValueError: If a user with the specified `user_id` does not exist.
     """
-    UserResponseModel.model_rebuild()
-    UserCreateModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, User)
         existing_user = repository.get(user_id)
@@ -152,9 +133,8 @@ def update_user(
             setattr(existing_user, key, value)
 
         repository.update(existing_user)
-        user_dict = existing_user.to_dict()
-        populate_developer_fields(user_dict)
-    return UserResponseModel.model_validate(user_dict)
+
+    return UserResponseModel.model_validate(existing_user.to_dict())
 
 
 def upsert_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
@@ -173,8 +153,6 @@ def upsert_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
     Returns:
         UserResponseModel: A validated response model with the upserted user data.
     """
-    UserResponseModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, User)
         existing_user = repository.query(email=user.email)
@@ -193,10 +171,7 @@ def upsert_user(user: UserCreateModel, session: ISession) -> UserResponseModel:
             )
             repository.create(user_obj)
 
-        user_dict = user_obj.to_dict()
-        populate_developer_fields(user_dict)
-
-    return UserResponseModel.model_validate(user_dict)
+    return UserResponseModel.model_validate(user_obj.to_dict())
 
 
 def get_all_users(
@@ -206,12 +181,16 @@ def get_all_users(
         repository = Repository(s, User)
         total = repository.count(**kwargs)
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
-        
+
+        pagination.order_by = order_by
+
         if total == 0:
             return [], pagination
 
@@ -219,15 +198,12 @@ def get_all_users(
             order_by=pagination.order_by,
             limit=pagination.limit,
             offset=pagination.offset,
+            options=[User.tasks, User.projects],  # type: ignore
             **kwargs,
         )
 
-        for user in query:
-            populate_fields(user)
-
-        users = [user.to_dict() for user in query]
         user_models = [
-            UserResponseModel.model_validate(user) for user in users
+            UserResponseModel.model_validate(user.to_dict()) for user in query
         ]
         return user_models, pagination
 
@@ -249,32 +225,31 @@ def get_user_tasks(
     Returns:
         List[TaskResponseModel]: A list of validated response models representing the tasks.
     """
-    TaskResponseModel.model_rebuild()
-    ProjectResponseModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, Task)
         tasks = repository.query(user_id=user_id)
 
         total = len(tasks)
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         if not tasks or total == 0:
             return [], pagination
 
         task_dicts = [task.to_dict() for task in tasks]
 
-    output = []
-    for task_dict in task_dicts:
-        for project in task_dict.get("logs", []):
-            if isinstance(project, dict):
-                project.setdefault("logs", [])
-        output.append(TaskResponseModel.model_validate(task_dict))
+    output = [
+        TaskResponseModel.model_validate(task_dict) for task_dict in task_dicts
+    ]
+
     return output, pagination
 
 
@@ -295,9 +270,6 @@ def get_project_by_user(
     Raises:
         IndexError: If no projects are associated with the specified user.
     """
-    ProjectResponseModel.model_rebuild()
-    UserResponseModel.model_rebuild()
-
     with session as s:
         repository = Repository(s, Project)
         project_user_repository = Repository(s, ProjectUser)
@@ -310,11 +282,15 @@ def get_project_by_user(
             )
         ]
 
+        order_by = pagination.order_by
+
         pagination = calculate_pagination(
             total=total,
             page=pagination.current_page or 1,
-            per_page=pagination.limit or 10,
+            per_page=pagination.limit or 15,
         )
+
+        pagination.order_by = order_by
 
         if total == 0:
             return [], pagination
@@ -332,17 +308,9 @@ def get_project_by_user(
 
         project_dicts = [project.to_dict() for project in projects]
 
-    output = []
-    for project_dict in project_dicts:
-        for developer in project_dict.get("developers", []):
-            if isinstance(developer, dict):
-                developer.setdefault("tasks", project_dict.get("tasks", []))
-                populate_fields(developer)
-        for task in project_dict.get("tasks", []):
-            if isinstance(task, dict):
-                populate_fields(task)
-        populate_fields(project_dict)
+    output = [
+        ProjectResponseModel.model_validate(project)
+        for project in project_dicts
+    ]
 
-        populate_project_fields(project_dict)
-        output.append(ProjectResponseModel.model_validate(project_dict))
     return output, pagination

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% import "macros.html" as macros %}
 {% block title %}Project Detail{% endblock %}
 
 {% block content %}
@@ -18,15 +19,11 @@
     <p><strong>Name: </strong> {{ project.name }}</p>
     <p>
       <strong>Developers: </strong>
-      <a href="/project/{{ project.id }}/users" class="text-[#0e5c6a] hover:underline">
-        {{ project.developers|length }} {{ "Developer" if project.developers|length == 1 else "Developers" }}
-      </a>
+      {{ macros.length_link(project.developers, '/project/' ~ project.id ~ '/users', 'Developer', 'Developers') }}
     </p>
     <p>
       <strong>Tasks: </strong>
-      <a href="/project/{{ project.id }}/tasks" class="text-[#0e5c6a] hover:underline">
-        {{ project.tasks|length }} {{ "Task" if project.tasks|length == 1 else "Tasks" }}
-      </a>
+      {{ macros.length_link(project.tasks, '/project/' ~ project.id ~ '/tasks', 'Task', 'Tasks') }}
     </p>
 </div>
 {% endblock %}

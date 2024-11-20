@@ -1,81 +1,68 @@
 {% extends "base.html" %}
 
-{% macro add_log_icon(task_id) %}
-    <a href="/task/{{ task_id }}/add_log" class="text-[#0e5c6a] hover:underline" title="Add Log">
-        <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-        </svg>
-    </a>
-{% endmacro %}
+{% import "macros.html" as macros %}
 
-{% block title %}Task List{% endblock %}
-
-{% block content %}
+{% block title %}Task List{% endblock %} {% block content %}
 
 <h1 class="text-2xl mb-4 flex items-center">
-    Tasks
-    <a href="/task/create" class="ml-4 text-[#0e5c6a] hover:underline" title="Create Task">
-        <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-        </svg>
-    </a>
+  Tasks
+  {{ macros.svg_link("/task/create") }}
 </h1>
 
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
-    <thead>
-        <tr class="bg-[#002F41] text-white">
-            {% for header in headers %}
-                <th class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm">{{ header }}</th>
-            {% endfor %}
-            <th class="w-1/12 text-center py-3 px-4 uppercase font-semibold text-sm">Log</th>
-        </tr>
-    </thead>
-    <tbody class="text-gray-700">
-        {% for row in data %}
-            <tr class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100">
-                {% for field in headers %}
-                    {% set key = field.lower().replace(" ", "_") %}
-                    <td class="w-1/{{ headers|length }} text-center py-3 px-4">
-                        {% if field == 'Title' %}
-                            <a href="/task/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row[key] }}</a>
-                        {% elif field == 'Project' %}
-                            <a href="/project/{{ row['project_id'] }}" class="text-[#0e5c6a] hover:underline">{{ row['project_name'] }}</a>
-                        {% elif field == 'User' %}
-                            <a href="/user/{{ row['user_id'] }}" class="text-[#0e5c6a] hover:underline">{{ row['user_name'] }}</a>
-                        {% elif field == 'Status' %}
-                            {% set status = row[key] %}
-                            {% if status == 'Planning' %}
-                                <span class="bg-blue-200 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'Research' %}
-                                <span class="bg-indigo-200 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'In Progress' %}
-                                <span class="bg-yellow-200 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'Done' %}
-                                <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'Cancelled' %}
-                                <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'On Hold' %}
-                                <span class="bg-gray-200 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'Testing' %}
-                                <span class="bg-purple-200 text-purple-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% elif status == 'Review' %}
-                                <span class="bg-pink-200 text-pink-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% else %}
-                                <span class="bg-gray-200 text-gray-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">{{ status }}</span>
-                            {% endif %}
-                        {% else %}
-                            {{ row[key] }}
-                        {% endif %}
-                    </td>
-                {% endfor %}
-                <td class="w-1/12 text-center py-3 px-4">
-                    {{ add_log_icon(row['id']) }}
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
+  <thead>
+    <tr class="bg-[#002F41] text-white">
+      {% for header in headers %}
+      <th
+        class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
+      >
+        {{ header }}
+      </th>
+      {% endfor %}
+      <th class="w-1/12 text-center py-3 px-4 uppercase font-semibold text-sm">
+        Log
+      </th>
+    </tr>
+  </thead>
+  <tbody class="text-gray-700">
+    {% for row in data %}
+    <tr
+      class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100"
+    >
+      {% for field in headers %} {% set key = field.lower().replace(" ", "_") %}
+      <td class="w-1/{{ headers|length }} text-center py-3 px-4">
+        {% if field == 'Title' %}
+        <a href="/task/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline"
+          >{{ row[key] }}</a
+        >
+        {% elif field == 'Project' %}
+        <a
+          href="/project/{{ row['project_id'] }}"
+          class="text-[#0e5c6a] hover:underline"
+          >{{ row['project_name'] }}</a
+        >
+        {% elif field == 'User' %}
+        <a
+          href="/user/{{ row['user_id'] }}"
+          class="text-[#0e5c6a] hover:underline"
+          >{{ row['user_name'] }}</a
+        >
+        {% elif field == 'Status' %}
+        {{ macros.render_status(row[key]) }}
+        
+        {% elif field == 'Logs' %} {{ macros.length_link(row[key], '/task/' ~ row.id ~ '/logs', 'Log', 'Logs') }}
+        
+        {% else %} {{ row[key] }} {% endif %}
+      </td>
+      {% endfor %}
+      <td class="w-1/12 text-center py-3 px-4">
+        
+      {{ macros.svg_link("/task/" ~ row['id'] ~ "/add_log") }}
+      
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 
-{% include "pagination.html" %}
-
-{% endblock %}
+{% include "pagination.html" %} {% endblock %}

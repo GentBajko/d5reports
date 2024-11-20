@@ -39,13 +39,23 @@
                     </form>
                 </div>
             </div>
+
+            <div id="admin-section" class="p-4 hidden">
+                <form method="get" action="/user">
+                    <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+                    <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out">Users</button>
+                </form>
+            </div>
+
             <div class="p-4">
                 <form method="post" action="/user/logout">
                     <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
                     <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out">Logout</button>
                 </form>
             </div>
+
             {% else %}
+
             <div class="flex-1"></div>
             <div class="p-4">
                 <form method="get" action="/user/login">
@@ -67,4 +77,17 @@
         </div>
     </div>
 </body>
+
+<script>
+    fetch('/user/is_admin')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                document.getElementById('admin-section').classList.remove('hidden');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+</script>
+
 </html>

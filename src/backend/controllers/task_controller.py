@@ -1,14 +1,14 @@
 from typing import Optional
-from sqlalchemy import asc, desc
+
 from ulid import ULID
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.models import TaskCreateModel, TaskResponseModel
-from backend.models.pagination import Pagination
-from core.models.task import Task
 from database.models import task_mapper  # noqa F401
+from core.models.task import Task
 from core.models.user import User
 from backend.dependencies import get_session
 from backend.views.task_view import (
@@ -25,6 +25,7 @@ from backend.dependencies.auth import (
     validate_csrf,
     get_current_user,
 )
+from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
 
 templates = Jinja2Templates(directory="src/backend/templates")
@@ -156,7 +157,13 @@ def get_all_tasks_endpoint(
             session, current_user.id, pagination
         )
 
-    table_headers = ["Title", "Hours Required", "Description", "Status"]
+    table_headers = [
+        "Title",
+        "Hours Required",
+        "Description",
+        "Status",
+        "Logs",
+    ]
 
     return templates.TemplateResponse(
         "task/tasks.html",
@@ -202,7 +209,13 @@ def get_tasks_by_project_endpoint(
 
     context = {
         "request": request,
-        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "headers": [
+            "Title",
+            "Hours Required",
+            "Description",
+            "Status",
+            "Logs",
+        ],
         "data": tasks,
         "pagination": pagination,
         "entity": "task",
@@ -245,7 +258,13 @@ def get_tasks_by_user_endpoint(
 
     context = {
         "request": request,
-        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "headers": [
+            "Title",
+            "Hours Required",
+            "Description",
+            "Status",
+            "Logs",
+        ],
         "data": tasks,
         "pagination": pagination,
         "entity": "task",

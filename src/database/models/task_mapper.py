@@ -1,4 +1,4 @@
-from sqlalchemy import Float, Table, Column, String, ForeignKey
+from sqlalchemy import Float, Table, Column, String, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship
 
 from core.models.task import Task
@@ -16,6 +16,7 @@ task_table = Table(
     Column("hours_required", Float, nullable=False),
     Column("description", String(255), nullable=True),
     Column("status", String(50), nullable=False),
+    Column("timestamp", BigInteger, nullable=False),
 )
 
 mapper_registry.map_imperatively(

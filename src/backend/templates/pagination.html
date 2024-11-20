@@ -3,9 +3,19 @@
     Showing {{ pagination.start_index }} to {{ pagination.end_index }} of {{ pagination.total }} entries
   </div>
   <div class="flex">
+    {% set sort = request.query_params.get('sort') %}
+    {% set order = request.query_params.get('order') %}
+    {% set query = {} %}
+    {% if sort %}
+      {% set _ = query.update({'sort': sort}) %}
+    {% endif %}
+    {% if order %}
+      {% set _ = query.update({'order': order}) %}
+    {% endif %}
+    
     {% if pagination.has_prev %}
     <a
-      href="?page={{ pagination.prev_page }}&sort={{ request.query_params.get('sort') }}&order={{ request.query_params.get('order') }}"
+      href="?page={{ pagination.prev_page }}{% for key, value in query.items() %}&{{ key }}={{ value }}{% endfor %}"
       class="px-3 py-1 border rounded-l"
     >
       Previous
@@ -15,21 +25,23 @@
       Previous
     </span>
     {% endif %}
+    
     {% for page in pagination.page_range %}
     {% if page == pagination.current_page %}
     <span class="px-3 py-1 border bg-gray-200">{{ page }}</span>
     {% else %}
     <a
-      href="?page={{ page }}&sort={{ request.query_params.get('sort') }}&order={{ request.query_params.get('order') }}"
+      href="?page={{ page }}{% for key, value in query.items() %}&{{ key }}={{ value }}{% endfor %}"
       class="px-3 py-1 border"
     >
       {{ page }}
     </a>
     {% endif %}
     {% endfor %}
+    
     {% if pagination.has_next %}
     <a
-      href="?page={{ pagination.next_page }}&sort={{ request.query_params.get('sort') }}&order={{ request.query_params.get('order') }}"
+      href="?page={{ pagination.next_page }}{% for key, value in query.items() %}&{{ key }}={{ value }}{% endfor %}"
       class="px-3 py-1 border rounded-r"
     >
       Next

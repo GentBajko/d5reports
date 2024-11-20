@@ -93,6 +93,7 @@ for i in range(100):
         hours_required=i + 1,
         description=f"Task {i} description",
         status=choice([status.value for status in TaskStatus]),
+        timestamp=int(datetime.now().timestamp()) + (i * 1000),
         logs=[],
     )
     tasks.append(task)
