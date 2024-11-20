@@ -8,6 +8,7 @@ from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
+from core.models.log import Log
 from database.models import user_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
@@ -17,6 +18,7 @@ from backend.utils.templates import templates
 from backend.views.user_view import (
     get_user,
     create_user,
+    get_user_logs,
     update_user,
     upsert_user,
     get_all_users,
@@ -278,3 +280,51 @@ def get_user_tasks_endpoint(
             "current_order": order,
         },
     )
+
+@user_router.get("/{user_id}/logs", response_class=HTMLResponse)
+def get_logs_by_user_endpoint(
+    request: Request,
+    user_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    order_by = []
+    if sort:
+        sort_column = getattr(Log, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    if current_user.id != user_id and not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    logs, pagination = get_user_logs(session, user_id, pagination)
+
+    context = {
+        "request": request,
+        "headers": [
+            "Task Name",
+            "Hours Spent Today",
+            "Description",
+            "Task Status",
+            "Timestamp",
+        ],
+        "data": logs,
+        "pagination": pagination,
+        "entity": "log",
+        "current_sort": sort,
+        "current_order": order,
+    }
+    return templates.TemplateResponse("log/logs.html", context)

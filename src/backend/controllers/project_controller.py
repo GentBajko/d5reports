@@ -77,7 +77,7 @@ def get_project_options(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    pagination = calculate_pagination(total=0, page=1, per_page=15)
+    pagination = calculate_pagination(total=0, page=1, per_page=300)
     projects = (
         get_all_projects(session, pagination)[0]
         if is_admin(current_user)

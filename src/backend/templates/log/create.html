@@ -1,29 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Create User{% endblock %}
+{% block title %}Create Log{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto bg-white p-8 shadow-md">
-    <h1 class="text-2xl mb-4">Create User</h1>
-    <form method="post" action="/user/">
+    <h1 class="text-2xl mb-4">Create Log</h1>
+    <form method="post" action="/log/">
         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
         <div class="mb-4">
-            <label class="block text-gray-700">Email</label>
-            <input type="email" name="email" class="w-full border p-2" required>
+            <label class="block text-gray-700">Task Name</label>
+            <select 
+                name="task_id" 
+                class="w-full border p-2" 
+                required
+                hx-get="/task/options"
+                hx-trigger="load"
+                hx-target="this"
+                hx-indicator=".htmx-indicator"
+                onchange="document.getElementById('task_name').value = this.options[this.selectedIndex].text;">
+                <option value="">Select a task...</option>
+                <div class="htmx-indicator">Loading...</div>
+            </select>
+            <input type="hidden" name="task_name" id="task_name" value="">
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700">Full Name</label>
-            <input type="text" name="full_name" class="w-full border p-2" required>
+            <label class="block text-gray-700">Hours Worked</label>
+            <input type="number" name="hours_spent_today" step="0.1" max="8" class="w-full border p-2" required>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700">Password</label>
-            <input type="password" name="password" class="w-full border p-2" required>
+            <label class="block text-gray-700">Status</label>
+            <select name="task_status" class="w-full border p-2" required>
+                <option value="Planning">Planning</option>
+                <option value="Research">Research</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Testing">Testing</option>
+                <option value="Review">Review</option>
+            </select>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700">Permissions</label>
-            <input type="number" name="permissions" class="w-full border p-2" required>
+            <label class="block text-gray-700">Description</label>
+            <textarea name="description" class="w-full border p-2 h-32" required></textarea>
         </div>
-        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create User</button>
+        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create Log</button>
     </form>
 </div>
 {% endblock %}

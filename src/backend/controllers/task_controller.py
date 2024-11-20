@@ -6,6 +6,7 @@ from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.models import TaskCreateModel, TaskResponseModel
+from core.models.log import Log
 from database.models import task_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
@@ -17,6 +18,7 @@ from backend.views.task_view import (
     update_task,
     upsert_task,
     get_all_tasks,
+    get_task_logs,
     get_user_tasks,
     get_project_tasks,
 )
@@ -72,6 +74,35 @@ async def create_task_endpoint(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse(f"/task/{task.id}", status_code=303)
+
+
+@task_router.get("/options", response_class=HTMLResponse)
+def get_project_options(
+    request: Request,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    pagination = Pagination(
+        limit=300,
+        current_page=1,
+        order_by=[Task.timestamp],  # type: ignore
+    )
+    tasks = (
+        get_all_tasks(session, pagination)[0]
+        if is_admin(current_user)
+        else [
+            project
+            for project in get_user_tasks(
+                session, current_user.id, pagination
+            )[0]
+        ]
+    )
+
+    options_html = ""
+    for task in tasks:
+        options_html += f'<option value="{task.id}">{task.title}</option>'
+
+    return HTMLResponse(content=options_html)
 
 
 @task_router.get("/{task_id}", response_class=HTMLResponse)
@@ -138,6 +169,7 @@ def get_all_tasks_endpoint(
     sort_mapping = {
         "Title": "title",
         "Hours Required": "hours_required",
+        "Hours Worked": "hours_worked",
         "Status": "status",
         "Timestamp": "timestamp",
     }
@@ -161,11 +193,10 @@ def get_all_tasks_endpoint(
             session, current_user.id, pagination
         )
 
-    print([task.timestamp for task in tasks])
-
     table_headers = [
         "Title",
         "Hours Required",
+        "Hours Worked",
         "Description",
         "Timestamp",
         "Status",
@@ -219,7 +250,9 @@ def get_tasks_by_project_endpoint(
         "headers": [
             "Title",
             "Hours Required",
+            "Hours Worked",
             "Description",
+            "Timestamp",
             "Status",
             "Logs",
         ],
@@ -268,7 +301,9 @@ def get_tasks_by_user_endpoint(
         "headers": [
             "Title",
             "Hours Required",
+            "Hours Worked",
             "Description",
+            "Timestamp",
             "Status",
             "Logs",
         ],
@@ -279,3 +314,49 @@ def get_tasks_by_user_endpoint(
         "current_order": order,
     }
     return templates.TemplateResponse("task/tasks.html", context)
+
+
+@task_router.get("/task/{task_id}", response_class=HTMLResponse)
+def get_logs_by_task_endpoint(
+    request: Request,
+    task_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 15,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    order_by = []
+    if sort:
+        sort_column = getattr(Log, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    logs, pagination = get_task_logs(session, task_id, pagination)
+
+    context = {
+        "request": request,
+        "headers": [
+            "Task Name",
+            "Hours Spent Today",
+            "Description",
+            "Task Status",
+            "Timestamp",
+        ],
+        "data": logs,
+        "pagination": pagination,
+        "entity": "log",
+        "current_sort": sort,
+        "current_order": order,
+    }
+    return templates.TemplateResponse("log/logs.html", context)

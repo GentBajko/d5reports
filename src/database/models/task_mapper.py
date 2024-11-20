@@ -17,6 +17,7 @@ task_table = Table(
     Column("description", String(255), nullable=True),
     Column("status", String(50), nullable=False),
     Column("timestamp", BigInteger, nullable=False),
+    Column("hours_worked", Float, nullable=False, default=0.0),
 )
 
 mapper_registry.map_imperatively(
@@ -34,7 +35,7 @@ mapper_registry.map_imperatively(
             lazy="noload",
         ),
         "logs": relationship(
-            "TaskLog",
+            "Log",
             back_populates="task",
             cascade="all, delete-orphan",
             lazy="noload",

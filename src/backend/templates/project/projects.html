@@ -15,7 +15,21 @@
     <thead>
         <tr class="bg-[#002F41] text-white">
             {% for header in headers %}
-                <th class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm">{{ header }}</th>
+                <th class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm">
+                    {% set field = header %}
+                    {% if current_sort == field %}
+                    {% if current_order == 'asc' %}
+                        {% set next_order = 'desc' %}
+                    {% else %}
+                        {% set next_order = 'asc' %}
+                    {% endif %}
+                    {% else %}
+                    {% set next_order = 'asc' %}
+                    {% endif %}
+                    <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
+                    {{ header }}
+                    </a>
+                </th>
             {% endfor %}
         </tr>
     </thead>

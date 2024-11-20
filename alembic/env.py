@@ -3,7 +3,7 @@ from database.models import (
     Task,  # noqa: F401
     User,  # noqa: F401
     Project,  # noqa: F401
-    TaskLog,  # noqa: F401
+    Log,  # noqa: F401
     project_developers_table,  # noqa: F401
 )
 from database.models.mapper import mapper_registry

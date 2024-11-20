@@ -8,18 +8,20 @@ from pydantic import Field, EmailStr, BaseModel
 class LogCreateModel(BaseModel):
     task_name: str
     description: str
-    hours_spent_today: int
+    hours_spent_today: float
     task_status: str
+    id: str = Field(default=str(ULID()))
     user_id: Optional[str] = None
     timestamp: int = Field(default=datetime.now().timestamp())
     task_id: str = Field(default=str(ULID()))
 
 
 class LogResponseModel(BaseModel):
+    id: str
     task_name: str
     description: str
     user_id: str
-    hours_spent_today: int
+    hours_spent_today: float
     task_status: str
     timestamp: int = Field(default=datetime.now().timestamp())
     task_id: str = Field(default=str(ULID()))
@@ -32,6 +34,7 @@ class TaskCreateModel(BaseModel):
     user_name: str
     title: str
     hours_required: float
+    hours_worked: float = 0.0
     description: str
     status: str
     timestamp: int = Field(default=int(datetime.now().timestamp()))
@@ -45,6 +48,7 @@ class TaskResponseModel(BaseModel):
     user_name: str
     title: str
     hours_required: float
+    hours_worked: float
     description: str
     status: str
     logs: List[LogCreateModel]

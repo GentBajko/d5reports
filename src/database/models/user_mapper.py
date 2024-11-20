@@ -33,7 +33,7 @@ mapper_registry.map_imperatively(
             lazy="selectin",
         ),
         "task_logs": relationship(
-            "TaskLog",
+            "Log",
             back_populates="user",
             cascade="all, delete-orphan",
             lazy="selectin",

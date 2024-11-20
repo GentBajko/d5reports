@@ -4,17 +4,17 @@ from datetime import datetime
 from ulid import ULID
 from argon2 import PasswordHasher
 
+from core.models.log import Log
 from database.models import (  # noqa F401
+    log_mapper,
     task_mapper,
     user_mapper,
     project_mapper,
-    task_log_mapper,
     project_developers_table,
 )
 from core.models.task import Task
 from core.models.user import User
 from core.models.project import Project
-from core.models.task_log import TaskLog
 from core.enums.premissions import Permissions
 from core.enums.task_status import TaskStatus
 from database.adapters.mysql import MySQL
@@ -68,7 +68,7 @@ while len(project_users) < 100:
     project_id = choice(projects).id
     user_id = choice(users).id
     pair = (project_id, user_id)
-    
+
     if pair not in seen_pairs:
         seen_pairs.add(pair)
         project_users.append(
@@ -101,7 +101,7 @@ for i in range(100):
 logs = []
 for i in range(100):
     task = choice(tasks)
-    log = TaskLog(
+    log = Log(
         id=str(ULID()),
         task_id=task.id,
         user_id=choice(users).id,
@@ -117,8 +117,8 @@ with SQLAlchemySession(MySQL.session()) as s:
     user_repo = Repository(s, User)
     project_repo = Repository(s, Project)
     task_repo = Repository(s, Task)
-    log_repo = Repository(s, TaskLog)
-    
+    log_repo = Repository(s, Log)
+
     project_user_table = Repository(s, ProjectUser)
 
     for user in users:

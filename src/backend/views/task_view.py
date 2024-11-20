@@ -1,10 +1,12 @@
-import datetime
 from typing import List, Tuple
+import datetime
 
 from backend.models import TaskCreateModel, TaskResponseModel
+from core.models.log import Log
 from database.models import task_mapper  # noqa F401
 from core.models.task import Task
 from core.models.project import Project
+from backend.models.models import LogResponseModel
 from backend.utils.pagination import calculate_pagination
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
@@ -225,3 +227,38 @@ def get_user_tasks(
         ]
 
     return tasks_list, pagination
+
+
+def get_task_logs(
+    session: ISession, task_id: str, pagination: Pagination, **kwargs
+) -> Tuple[List[LogResponseModel], Pagination]:
+    with session as s:
+        repo = Repository(s, Log)
+        total = repo.count(task_id=task_id, **kwargs)
+
+        order_by = pagination.order_by
+
+        pagination = calculate_pagination(
+            total=total,
+            page=pagination.current_page or 1,
+            per_page=pagination.limit or 15,
+        )
+
+        pagination.order_by = order_by
+
+        if total == 0:
+            return [], pagination
+
+        logs = repo.query(
+            task_id=task_id,
+            order_by=pagination.order_by,
+            limit=pagination.limit,
+            offset=pagination.offset,
+            **kwargs,
+        )
+
+        logs_list = [
+            LogResponseModel.model_validate(log.to_dict()) for log in logs
+        ]
+
+    return logs_list, pagination

@@ -1,12 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}User Detail{% endblock %}
+{% import "macros.html" as macros %}
+{% block title %}Task Details{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
-    <h1 class="text-2xl mb-4">User Detail</h1>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Full Name:</strong> {{ user.full_name }}</p>
-    <p><strong>Permissions:</strong> {{ user.permissions }}</p>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl">Log Details</h1>
+    </div>
+    <p><strong>ID:</strong> {{ log.id }}</p>
+    <p><strong>Task Name: </strong> {{ log.task_name }}</p>
+    <p><strong>Developer: </strong> {{ log.user_name }}</p>
+    <p><strong>Hours Spent Today: </strong> {{ log.hours_spent_today }}</p>
+    <p>
+        <strong>Status: </strong>
+        {{ macros.render_status(log.task_status) }}
+    </p>
+    <p><strong>Created At: </strong> {{ log.created_at }}</p>
+    <p><strong>Description:</strong> {{ log.description }}</p>
 </div>
 {% endblock %}

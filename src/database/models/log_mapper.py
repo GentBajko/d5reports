@@ -1,7 +1,7 @@
 from sqlalchemy import Float, Table, Column, String, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship
 
-from core.models.task_log import TaskLog
+from core.models.log import Log
 from database.models.mapper import mapper_registry
 
 task_log_table = Table(
@@ -18,7 +18,7 @@ task_log_table = Table(
 )
 
 mapper_registry.map_imperatively(
-    TaskLog,
+    Log,
     task_log_table,
     properties={
         "task": relationship(

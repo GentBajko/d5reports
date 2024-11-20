@@ -68,12 +68,21 @@
         
         {% elif field == 'Logs' %} {{ macros.length_link(row[key], '/task/' ~ row.id ~ '/logs', 'Log', 'Logs') }}
         
+        {% elif field == 'Hours Worked' %}
+          {% set hours = row[key] %}
+          {$ set old = row['timestamp']|is_old %}
+          {% if hours > row['hours_required'] or old %}
+            <span class="text-red-500">{{ hours }}</span>
+          {% else %}
+           <span class="text-green-500">{{ hours }}</span>
+        {% endif %}
+
         {% else %} {{ row[key] }} {% endif %}
       </td>
       {% endfor %}
       <td class="w-1/12 text-center py-3 px-4">
         
-      {{ macros.svg_link("/task/" ~ row['id'] ~ "/add_log") }}
+      {{ macros.svg_link("/log/create" ~ row.id ~ "/" ~ row.title ) }}
       
       </td>
     </tr>

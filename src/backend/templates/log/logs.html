@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% import "macros.html" as macros %}
+
+{% block title %}Log List{% endblock %}
+
+{% block content %}
+
+<h1 class="text-2xl mb-4 flex items-center">
+  Logs
+  {{ macros.svg_link("/log/create") }}
+</h1>
+
+<table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
+  <thead>
+    <tr class="bg-[#002F41] text-white">
+      {% for header in headers %}
+      <th class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm">
+        {% set field = header %}
+        {% if current_sort == field %}
+          {% if current_order == 'asc' %}
+            {% set next_order = 'desc' %}
+          {% else %}
+            {% set next_order = 'asc' %}
+          {% endif %}
+        {% else %}
+          {% set next_order = 'asc' %}
+        {% endif %}
+        <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
+          {{ header }}
+        </a>
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody class="text-gray-700">
+    {% for row in data %}
+    <tr class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100">
+      {% for field in headers %}
+      {% set key = field.lower().replace(" ", "_") %}
+      <td class="w-1/{{ headers|length }} text-center py-3 px-4">
+        {% if field == 'Task Name' %}
+          <a href="/task/{{ row['task_id'] }}" class="text-[#0e5c6a] hover:underline">
+            {{ row['task_name'] }}
+          </a>
+        {% elif field == 'User' %}
+          <a href="/user/{{ row['user_id'] }}" class="text-[#0e5c6a] hover:underline">
+            {{ row['user_name'] }}
+          </a>
+        {% elif field == 'Timestamp' %}
+          {{ row['timestamp'] | date_to_string }}
+        {% elif field == 'Hours Spent Today' %}
+          {{ row['hours_spent_today'] }}
+        {% elif field == 'Description' %}
+          {{ row['description'] }}
+        {% elif field == 'Task Status' %}
+        {{ macros.render_status(row['task_status']) }}
+        {% else %}
+          {{ row[key] }}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include "pagination.html" %}
+
+{% endblock %}

@@ -5,7 +5,7 @@ from ulid import ULID
 from core.enums.task_status import TaskStatus
 
 
-class TaskLog:
+class Log:
     def __init__(
         self,
         id: str,
@@ -14,7 +14,7 @@ class TaskLog:
         task_name: str,
         description: str,
         user_id: str,
-        hours_spent_today: int,
+        hours_spent_today: float,
         task_status: str,
     ):
         self.id = id

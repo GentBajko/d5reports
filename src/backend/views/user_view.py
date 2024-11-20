@@ -8,11 +8,12 @@ from backend.models import (
     UserResponseModel,
     ProjectResponseModel,
 )
+from core.models.log import Log
 from database.models import user_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
 from core.models.project import Project
-from backend.models.models import TaskResponseModel
+from backend.models.models import LogResponseModel, TaskResponseModel
 from backend.utils.pagination import calculate_pagination
 from core.models.project_user import ProjectUser
 from backend.models.pagination import Pagination
@@ -314,3 +315,38 @@ def get_project_by_user(
     ]
 
     return output, pagination
+
+def get_user_logs(
+    session: ISession, user_id: str, pagination: Pagination, **kwargs
+) -> Tuple[List[LogResponseModel], Pagination]:
+    with session as s:
+        repo = Repository(s, Log)
+        total = repo.count(user_id=user_id, **kwargs)
+
+        order_by = pagination.order_by
+
+        pagination = calculate_pagination(
+            total=total,
+            page=pagination.current_page or 1,
+            per_page=pagination.limit or 15,
+        )
+
+        pagination.order_by = order_by
+
+        if total == 0:
+            return [], pagination
+
+        logs = repo.query(
+            user_id=user_id,
+            order_by=pagination.order_by,
+            limit=pagination.limit,
+            offset=pagination.offset,
+            **kwargs,
+        )
+
+        logs_list = [
+            LogResponseModel.model_validate(log.to_dict()) for log in logs
+        ]
+
+    return logs_list, pagination
+
