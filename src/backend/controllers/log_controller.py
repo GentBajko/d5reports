@@ -2,7 +2,7 @@ from typing import Optional
 from datetime import datetime
 
 from ulid import ULID
-from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from fastapi import Form, Depends, Query, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -31,13 +31,14 @@ from database.interfaces.session import ISession
 log_router = APIRouter(prefix="/log")
 
 
-@log_router.get("/{task_id}/create")
+@log_router.get("/create", response_class=HTMLResponse)
 def get_log_home(
     request: Request,
-    task_id: str,
-    current_user: User = Depends(get_current_user)
+    task_id: Optional[str] = Query(None),
+    task_name: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
 ):
-    return templates.TemplateResponse("log/create.html", {"request": request, "task_id": task_id})
+    return templates.TemplateResponse("log/create.html", {"request": request, "task_id": task_id, "task_name": task_name})
 
 
 @log_router.post("/", response_class=HTMLResponse)
@@ -69,7 +70,7 @@ async def create_log_endpoint(
     return RedirectResponse(f"/log/{log.id}", status_code=303)
 
 
-@log_router.get("/create", response_class=HTMLResponse)
+@log_router.get("/{log_id}", response_class=HTMLResponse)
 def get_log_endpoint(
     request: Request,
     log_id: str,

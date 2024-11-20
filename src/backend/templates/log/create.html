@@ -13,15 +13,21 @@
                 name="task_id" 
                 class="w-full border p-2" 
                 required
-                hx-get="/task/options"
-                hx-trigger="load"
-                hx-target="this"
-                hx-indicator=".htmx-indicator"
-                onchange="document.getElementById('task_name').value = this.options[this.selectedIndex].text;">
-                <option value="">Select a task...</option>
-                <div class="htmx-indicator">Loading...</div>
+                {% if not task_id %}
+                    hx-get="/task/options"
+                    hx-trigger="load"
+                    hx-target="this"
+                    hx-indicator=".htmx-indicator"
+                {% endif %}
+                onchange="document.getElementById('task_name').value = this.options[this.selectedIndex].text;"
+            >
+                {% if task_id and task_name %}
+                    <option value="{{ task_id }}" selected>{{ task_name }}</option>
+                {% else %}
+                    <option value="">Select a task...</option>
+                {% endif %}
             </select>
-            <input type="hidden" name="task_name" id="task_name" value="">
+            <input type="hidden" name="task_name" id="task_name" value="{{ task_name if task_name else '' }}">
         </div>
         <div class="mb-4">
             <label class="block text-gray-700">Hours Worked</label>

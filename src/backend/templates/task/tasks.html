@@ -70,7 +70,7 @@
         
         {% elif field == 'Hours Worked' %}
           {% set hours = row[key] %}
-          {$ set old = row['timestamp']|is_old %}
+          {% set old = row['timestamp']|is_old %}
           {% if hours > row['hours_required'] or old %}
             <span class="text-red-500">{{ hours }}</span>
           {% else %}
@@ -81,9 +81,7 @@
       </td>
       {% endfor %}
       <td class="w-1/12 text-center py-3 px-4">
-        
-      {{ macros.svg_link("/log/create" ~ row.id ~ "/" ~ row.title ) }}
-      
+        {{ macros.svg_link("/log/create?task_id=" ~ row.id ~ "&task_name=" ~ row.title) }}
       </td>
     </tr>
     {% endfor %}
