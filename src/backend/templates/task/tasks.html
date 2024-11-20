@@ -16,7 +16,19 @@
       <th
         class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
       >
-        {{ header }}
+        {% set field = header %}
+        {% if current_sort == field %}
+          {% if current_order == 'asc' %}
+            {% set next_order = 'desc' %}
+          {% else %}
+            {% set next_order = 'asc' %}
+          {% endif %}
+        {% else %}
+          {% set next_order = 'asc' %}
+        {% endif %}
+        <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
+          {{ header }}
+        </a>
       </th>
       {% endfor %}
       <th class="w-1/12 text-center py-3 px-4 uppercase font-semibold text-sm">
@@ -47,6 +59,10 @@
           class="text-[#0e5c6a] hover:underline"
           >{{ row['user_name'] }}</a
         >
+
+        {% elif field == 'Timestamp' %}
+        {{ row['timestamp'] | date_to_string }}
+
         {% elif field == 'Status' %}
         {{ macros.render_status(row[key]) }}
         

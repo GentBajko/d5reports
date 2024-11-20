@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from backend.models import (
     UserCreateModel,
@@ -14,6 +13,7 @@ from core.models.task import Task
 from core.models.user import User
 from core.models.project import Project
 from backend.dependencies import get_session
+from backend.utils.templates import templates
 from backend.views.user_view import (
     get_user,
     create_user,
@@ -32,8 +32,6 @@ from backend.dependencies.auth import (
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
 
-templates = Jinja2Templates(directory="src/backend/templates")
-
 user_router = APIRouter(prefix="/user")
 
 
@@ -45,12 +43,14 @@ def get_user_home(
         raise HTTPException(status_code=401, detail="Access forbidden")
     return templates.TemplateResponse("user/create.html", {"request": request})
 
+
 @user_router.get("/is_admin", response_model=bool)
 def is_admin_endpoint(
     request: Request,
     current_user: User = Depends(get_current_user),
 ):
     return is_admin(current_user)
+
 
 @user_router.post("/")
 async def create_user_endpoint(
@@ -107,20 +107,11 @@ async def logout(
 def get_user_options(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = None,
-    order: Optional[str] = None,
     limit: int = 300,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-    if sort:
-        sort_column = getattr(User, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
+    order_by = [User.full_name]  # type: ignore
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
@@ -173,16 +164,23 @@ def get_all_users_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     order_by = []
+
+    sort_mapping = {
+        "Name": "full_name",
+        "Email": "email",
+    }
+
     if sort:
-        sort_column = getattr(User, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
+        sort_field = sort_mapping.get(sort)
+        if sort_field:
+            sort_column = getattr(User, sort_field, None)
+            if sort_column:
+                if order and order.lower() == "desc":
+                    order_by.append(desc(sort_column))
+                else:
+                    order_by.append(asc(sort_column))
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
-
     users, pagination = get_all_users(session, pagination)
 
     return templates.TemplateResponse(

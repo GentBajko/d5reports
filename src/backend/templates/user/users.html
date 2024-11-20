@@ -6,6 +6,9 @@
 
 {% block content %}
 
+{% set current_sort = request.query_params.get('sort') %}
+{% set current_order = request.query_params.get('order', 'asc') %}
+
 <h1 class="text-2xl mb-4">
   Users
   {{ macros.svg_link("/user/create") }}
@@ -18,7 +21,19 @@
       <th
         class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
       >
-        {{ header }}
+        {% set field = header %}
+        {% if current_sort == field %}
+          {% if current_order == 'asc' %}
+            {% set next_order = 'desc' %}
+          {% else %}
+            {% set next_order = 'asc' %}
+          {% endif %}
+        {% else %}
+          {% set next_order = 'asc' %}
+        {% endif %}
+        <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
+          {{ header }}
+        </a>
       </th>
       {% endfor %}
     </tr>
@@ -46,7 +61,7 @@
         {% elif field == 'Tasks' %}
         
         {{ macros.length_link(row[key], '/user/' ~ row.id ~ '/tasks', 'Task', 'Tasks') }}
-        
+
         {% else %} {{ row[key] }} {% endif %}
       </td>
       {% endfor %}

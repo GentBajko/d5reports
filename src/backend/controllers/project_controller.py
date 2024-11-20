@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from backend.models import (
     ProjectCreateModel,
@@ -14,6 +13,7 @@ from core.models.task import Task
 from core.models.user import User
 from core.models.project import Project
 from backend.dependencies import get_session
+from backend.utils.templates import templates
 from backend.utils.pagination import calculate_pagination
 from backend.dependencies.auth import (
     is_admin,
@@ -33,8 +33,6 @@ from backend.views.project_view import (
     assign_project_to_user,
 )
 from database.interfaces.session import ISession
-
-templates = Jinja2Templates(directory="src/backend/templates")
 
 project_router = APIRouter(prefix="/project")
 

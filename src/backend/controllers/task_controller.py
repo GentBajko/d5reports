@@ -4,13 +4,13 @@ from ulid import ULID
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from backend.models import TaskCreateModel, TaskResponseModel
 from database.models import task_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
 from backend.dependencies import get_session
+from backend.utils.templates import templates
 from backend.views.task_view import (
     get_task,
     create_task,
@@ -27,8 +27,6 @@ from backend.dependencies.auth import (
 )
 from backend.models.pagination import Pagination
 from database.interfaces.session import ISession
-
-templates = Jinja2Templates(directory="src/backend/templates")
 
 task_router = APIRouter(prefix="/task")
 
@@ -136,17 +134,23 @@ def get_all_tasks_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     order_by = []
+
+    sort_mapping = {
+        "Title": "title",
+        "Hours Required": "hours_required",
+        "Status": "status",
+        "Timestamp": "timestamp",
+    }
+
     if sort:
-        sort_column = getattr(Task, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid sort field: {sort}"
-            )
+        sort_field = sort_mapping.get(sort)
+        if sort_field:
+            sort_column = getattr(Task, sort_field, None)
+            if sort_column:
+                if order and order.lower() == "desc":
+                    order_by.append(desc(sort_column))
+                else:
+                    order_by.append(asc(sort_column))
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
@@ -157,10 +161,13 @@ def get_all_tasks_endpoint(
             session, current_user.id, pagination
         )
 
+    print([task.timestamp for task in tasks])
+
     table_headers = [
         "Title",
         "Hours Required",
         "Description",
+        "Timestamp",
         "Status",
         "Logs",
     ]
