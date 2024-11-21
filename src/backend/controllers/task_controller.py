@@ -316,7 +316,7 @@ def get_tasks_by_user_endpoint(
     return templates.TemplateResponse("task/tasks.html", context)
 
 
-@task_router.get("/task/{task_id}", response_class=HTMLResponse)
+@task_router.get("/{task_id}/logs", response_class=HTMLResponse)
 def get_logs_by_task_endpoint(
     request: Request,
     task_id: str,
