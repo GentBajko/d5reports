@@ -20,12 +20,12 @@
             </div>
             {% if request.session.get('user_id') %}
             <div class="flex-1">
-                <div class="p-4">
+                <!-- <div class="p-4">
                     <form method="get" action="/">
                         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
                         <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out">Dashboard</button>
                     </form>
-                </div>
+                </div> -->
                 <div class="p-4">
                     <form method="get" action="/project">
                         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
