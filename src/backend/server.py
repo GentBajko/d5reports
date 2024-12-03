@@ -2,17 +2,18 @@ import secrets
 
 from loguru import logger
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from config.env import ENV
+from backend.controllers.log_controller import log_router
 from backend.controllers.task_controller import task_router
 from backend.controllers.user_controller import user_router
 from backend.controllers.project_controller import project_router
 from backend.controllers.dashboard_controller import dashboard_router
 from backend.controllers.healthcheck_controller import healthcheck_router
-from backend.controllers.log_controller import log_router
 
 app = FastAPI(title="Division5 Reports API", version="0.1.0")
 
@@ -37,6 +38,25 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class AuthRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        public_paths = [
+            "/user/login",
+            "/healthcheck",
+        ]
+
+        if any(request.url.path.startswith(path) for path in public_paths):
+            return await call_next(request)
+
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return RedirectResponse(url="/user/login")
+
+        response = await call_next(request)
+        return response
+
+
+app.add_middleware(AuthRedirectMiddleware)
 app.add_middleware(CSRFMiddleware)
 
 app.add_middleware(
