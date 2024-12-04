@@ -1,6 +1,10 @@
 <div class="flex justify-between items-center mt-4">
   <div>
-    Showing {{ pagination.start_index }} to {{ pagination.end_index }} of {{ pagination.total }} entries
+    {% if pagination.total > 0 %}
+      Showing {{ pagination.start_index }} to {{ pagination.end_index }} of {{ pagination.total }} entries
+    {% else %}
+      Showing 0 to 0 of 0 entries
+    {% endif %}
   </div>
   <div class="flex">
     {% set sort = request.query_params.get('sort') %}
