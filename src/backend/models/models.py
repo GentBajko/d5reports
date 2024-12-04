@@ -57,17 +57,17 @@ class TaskResponseModel(BaseModel):
 
 class ProjectCreateModel(BaseModel):
     name: str
-    email: EmailStr
     send_email: bool
+    email: Optional[EmailStr] = None
     archived: bool = False
 
 
 class ProjectResponseModel(BaseModel):
     id: str
     name: str
-    email: EmailStr
     send_email: bool
     archived: bool
+    email: Optional[EmailStr] = None
     developers: List["UserResponseModel"] = Field(default_factory=list)
     tasks: List[TaskResponseModel] = Field(default_factory=list)
 

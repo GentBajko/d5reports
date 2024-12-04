@@ -11,9 +11,9 @@ class Project:
     def __init__(
         self,
         name: str,
-        email: str,
         send_email: bool,
         archived: bool,
+        email: Optional[str] = None,
         id: Optional[str] = None,
         developers: Optional[List["User"]] = None,
         tasks: Optional[List["Task"]] = None,

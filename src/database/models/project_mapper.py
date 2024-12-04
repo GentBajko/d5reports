@@ -10,7 +10,7 @@ project_table = Table(
     mapper_registry.metadata,
     Column("id", String(26), primary_key=True),
     Column("name", String(100), nullable=False),
-    Column("email", String(50), nullable=False),
+    Column("email", String(50), nullable=True),
     Column("send_email", Boolean, default=False),
     Column("archived", Boolean, default=False),
 )
