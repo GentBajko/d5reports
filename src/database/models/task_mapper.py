@@ -15,7 +15,7 @@ task_table = Table(
     Column("title", String(100), nullable=False),
     Column("hours_required", Float, nullable=False),
     Column("description", String(255), nullable=True),
-    Column("status", String(50), nullable=False),
+    Column("status", String(50), nullable=True),
     Column("timestamp", BigInteger, nullable=False),
     Column("hours_worked", Float, nullable=False, default=0.0),
 )

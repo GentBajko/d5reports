@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ulid import ULID
+from loguru import logger
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -46,11 +46,11 @@ def get_task_home(
 @task_router.post("/", response_class=HTMLResponse)
 async def create_task_endpoint(
     request: Request,
+    project_id: str = Form(...),
     project_name: str = Form(...),
     title: str = Form(...),
     hours_required: float = Form(...),
     description: str = Form(...),
-    status: str = Form(...),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
     csrf_protect=Depends(validate_csrf),
@@ -60,18 +60,18 @@ async def create_task_endpoint(
     """
 
     task_data = TaskCreateModel(
-        project_id=str(ULID()),
+        project_id=project_id,
         project_name=project_name,
         user_id=current_user.id,
         user_name=current_user.full_name,
         title=title,
         hours_required=hours_required,
         description=description,
-        status=status,
     )
     try:
         task = create_task(task_data, session)
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse(f"/task/{task.id}", status_code=303)
 
