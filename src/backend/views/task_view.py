@@ -20,25 +20,22 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
     with session as s:
         project_repo = Repository(s, Project)
 
-        project = project_repo.query(id=task.project_name)
+        project = project_repo.get(id=task.project_id)
 
         if not project:
             raise ValueError("Project not found")
 
         repo = Repository(s, Task)
-        project_repo = Repository(s, Project)
 
-        project = project_repo.query(id=task.project_id)
 
         new_task = Task(
-            project_id=project[0].id,
-            project_name=project[0].name,
+            project_id=project.id,
+            project_name=project.name,
             user_id=task.user_id,
             user_name=task.user_name,
             title=task.title,
             hours_required=task.hours_required,
             description=task.description,
-            status=task.status,
             timestamp=int(datetime.datetime.now().timestamp()),
             logs=[],
         )
@@ -46,7 +43,7 @@ def create_task(task: TaskCreateModel, session: ISession) -> TaskResponseModel:
         repo.create(new_task)
         s.commit()
         task_data = new_task.to_dict()
-        task_data["project_name"] = project[0].name
+        task_data["project_name"] = project.name
     return TaskResponseModel.model_validate(task_data)
 
 

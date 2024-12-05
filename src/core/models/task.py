@@ -19,9 +19,9 @@ class Task:
         title: str,
         hours_required: float,
         description: str,
-        status: str,
         timestamp: int,
         hours_worked: float = 0.0,
+        status: Optional[str] = None,
         id: Optional[str] = None,
         logs: Optional[List["Log"]] = None,
     ):
