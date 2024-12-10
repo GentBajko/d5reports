@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from ulid import ULID
-from pydantic import Field, EmailStr, BaseModel
+from pydantic import Field, EmailStr, BaseModel, validator
 
 
 class LogCreateModel(BaseModel):
@@ -61,6 +61,11 @@ class ProjectCreateModel(BaseModel):
     email: Optional[EmailStr] = None
     archived: bool = False
 
+    @validator('email', pre=True, always=True)
+    def empty_str_to_none(cls, v):
+        if v == '':
+            return None
+        return v
 
 class ProjectResponseModel(BaseModel):
     id: str
@@ -71,6 +76,11 @@ class ProjectResponseModel(BaseModel):
     developers: List["UserResponseModel"] = Field(default_factory=list)
     tasks: List[TaskResponseModel] = Field(default_factory=list)
 
+    @validator('email', pre=True, always=True)
+    def empty_str_to_none(cls, v):
+        if v == '':
+            return None
+        return v
 
 class UserCreateModel(BaseModel):
     email: EmailStr
