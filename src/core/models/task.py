@@ -21,6 +21,7 @@ class Task:
         description: str,
         timestamp: int,
         hours_worked: float = 0.0,
+        last_updated: Optional[int] = None,
         status: Optional[str] = None,
         id: Optional[str] = None,
         logs: Optional[List["Log"]] = None,
@@ -37,6 +38,7 @@ class Task:
         self.status = status
         self.timestamp = timestamp
         self.hours_worked = hours_worked
+        self.last_updated = last_updated
 
     @property
     def _id(self) -> ULID:
@@ -53,6 +55,14 @@ class Task:
     @property
     def _timestamp(self) -> datetime:
         return datetime.fromtimestamp(self.timestamp)
+
+    @property
+    def _last_updated(self) -> Optional[datetime]:
+        return (
+            datetime.fromtimestamp(self.last_updated)
+            if self.last_updated
+            else None
+        )
 
     def to_dict(self, visited=None):
         if visited is None:
@@ -87,6 +97,7 @@ class Task:
             "description": self.description,
             "status": self.status,
             "timestamp": self.timestamp,
+            "last_updated": self.last_updated,
             "hours_worked": self.hours_worked,
             "logs": [log.to_dict(visited) for log in self.logs]
             if self.logs
@@ -106,6 +117,7 @@ class Task:
             description=data["description"],
             status=data["status"],
             timestamp=data["timestamp"],
+            last_updated=data["last_updated"],
             hours_worked=data.get("hours_worked", 0.0),
             logs=[Log.from_dict(log) for log in data.get("logs", [])],
         )

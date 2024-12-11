@@ -3,6 +3,9 @@ from sqlalchemy.orm import relationship
 
 from core.models.task import Task
 from database.models.mapper import mapper_registry
+from sqlalchemy.orm import column_property
+from sqlalchemy.sql import select, func
+from core.models.log import Log
 
 task_table = Table(
     "task",
@@ -39,6 +42,12 @@ mapper_registry.map_imperatively(
             back_populates="task",
             cascade="all, delete-orphan",
             lazy="noload",
+        ),
+        "last_updated": column_property(
+            select(func.max(Log.timestamp)) # type: ignore
+            .where(Log.task_id == task_table.c.id) # type: ignore
+            .correlate_except(Log)
+            .scalar_subquery()
         ),
     },
 )

@@ -52,6 +52,7 @@ class TaskResponseModel(BaseModel):
     description: str
     logs: List[LogCreateModel]
     status: Optional[str] = None
+    last_updated: Optional[int] = Field(default=None)
     timestamp: int = Field(default=int(datetime.now().timestamp()))
 
 

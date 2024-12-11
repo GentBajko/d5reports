@@ -172,6 +172,7 @@ def get_all_tasks_endpoint(
         "Hours Worked": "hours_worked",
         "Status": "status",
         "Timestamp": "timestamp",
+        "Last Updated": "last_updated",
     }
 
     if sort:
@@ -201,6 +202,7 @@ def get_all_tasks_endpoint(
         "Timestamp",
         "Status",
         "Logs",
+        "Last Updated",
     ]
 
     return templates.TemplateResponse(

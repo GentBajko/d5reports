@@ -6,8 +6,8 @@ templates = Jinja2Templates(directory="src/backend/templates")
 
 
 def date_to_string(timestamp):
-    dt_object = datetime.fromtimestamp(timestamp)
-    return dt_object.strftime("%d-%m-%Y @ %H:%M:%S")
+    dt_object = datetime.fromtimestamp(timestamp) if timestamp else None
+    return dt_object.strftime("%d-%m-%Y @ %H:%M:%S") if dt_object else ""
 
 
 templates.env.filters["date_to_string"] = date_to_string
