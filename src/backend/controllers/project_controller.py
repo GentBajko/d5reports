@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from fastapi import Form, Depends, Request, APIRouter, HTTPException, Response
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -118,14 +118,51 @@ def get_project_endpoint(
         "project/detail.html", {"request": request, "project": project}
     )
 
-
-@project_router.put("/{project_id}", response_model=ProjectResponseModel)
-def update_project_endpoint(
+@project_router.get("/{project_id}/edit", response_model=ProjectResponseModel)
+def update_project_page(
+    Request: Request,
     project_id: str,
-    project_update: ProjectCreateModel,
     session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
-    return update_project(project_id, project_update, session)
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    project = get_project(session, id=project_id)
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return templates.TemplateResponse(
+        "project/edit.html", {"project": project, "request": Request}
+    )
+
+@project_router.put("/{project_id}", response_class=HTMLResponse)
+async def update_project_endpoint(
+    request: Request,
+    project_id: str,
+    name: str = Form(...),
+    send_email: bool = Form(False),
+    archived: bool = Form(False),
+    email: str = Form(""),
+    csrftoken: str = Form(""),
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    project_update = ProjectCreateModel(
+        name=name,
+        send_email=send_email,
+        archived=archived,
+        email=email
+    )
+
+    update_project(project_id, project_update, session)
+
+    headers = {"HX-Redirect": f"/project/{project_id}"}
+    return Response(status_code=200, headers=headers)
 
 
 @project_router.post("/upsert", response_model=ProjectResponseModel)

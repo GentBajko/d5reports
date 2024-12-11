@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Project{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
+    <h1 class="text-2xl mb-4">Edit Project</h1>
+    
+    <form 
+        hx-put="/project/{{ project.id }}" 
+        hx-trigger="submit" 
+        hx-include="[name='csrftoken']"
+        id="edit-project-form"
+    >
+        <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+        
+        <div class="mb-4">
+            <label class="block text-gray-700">Project Name</label>
+            <input 
+                type="text" 
+                name="name" 
+                class="w-full border p-2" 
+                value="{{ project.name }}" 
+                required
+            >
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700">Send Email</label>
+            <input 
+                type="checkbox" 
+                name="send_email" 
+                class="mr-2" 
+                {% if project.send_email %}checked{% endif %}
+            >
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700">Archived</label>
+            <input 
+                type="checkbox" 
+                name="archived" 
+                class="mr-2" 
+                {% if project.archived %}checked{% endif %}
+            >
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700">Email</label>
+            <input 
+                type="email" 
+                name="email" 
+                class="w-full border p-2" 
+                value="{{ project.email|default('') }}"
+            >
+        </div>
+        
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2">Update Project</button>
+    </form>
+
+    <div id="project-details">
+    </div>
+</div>
+{% endblock %}
