@@ -10,6 +10,7 @@
         <div class="mb-4">
             <label class="block text-gray-700">Task Name</label>
             <select 
+                id="task_select"
                 name="task_id" 
                 class="w-full border p-2" 
                 required
@@ -17,15 +18,13 @@
                 hx-trigger="load"
                 hx-target="this"
                 hx-indicator=".htmx-indicator"
+                data-selected-task-id="{{ task_id|escape }}"
+                data-selected-task-name="{{ task_name|escape }}"
                 onchange="document.getElementById('task_name').value = this.options[this.selectedIndex].text;"
             >
-                {% if task_id and task_name %}
-                    <option value="{{ task_id }}" selected>{{ task_name }}</option>
-                {% else %}
-                    <option value="">Select a task...</option>
-                {% endif %}
+                <option value="">Loading tasks...</option>
             </select>
-            <input type="hidden" name="task_name" id="task_name" value="{{ task_name if task_name else '' }}">
+            <input type="hidden" name="task_name" id="task_name" value="{{ task_name|default('') }}">
             <div class="htmx-indicator">Loading...</div>
         </div>
         <div class="mb-4">
@@ -52,4 +51,22 @@
         <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create Log</button>
     </form>
 </div>
+<script>
+    document.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.target.id === 'task_select') {
+            var select = document.getElementById('task_select');
+            var selectedTaskId = select.getAttribute('data-selected-task-id');
+            var selectedTaskName = select.getAttribute('data-selected-task-name');
+
+            if (selectedTaskId) {
+                select.value = selectedTaskId;
+
+                var selectedOption = select.options[select.selectedIndex];
+                if (selectedOption) {
+                    document.getElementById('task_name').value = selectedOption.text;
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
