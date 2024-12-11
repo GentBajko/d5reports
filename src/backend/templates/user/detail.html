@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
+{% import "macros.html" as macros %}
 {% block title %}User Detail{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
     <h1 class="text-2xl mb-4">User Detail</h1>
+    <p><strong>ID:</strong> {{ user.id }}</p>
     <p><strong>Email:</strong> {{ user.email }}</p>
     <p><strong>Full Name:</strong> {{ user.full_name }}</p>
     <p><strong>Permissions:</strong> 
@@ -14,5 +16,7 @@
         Developer
     {% endif %}
     </p>
+    <p><strong>Projects: </strong> {{ macros.length_link(user.projects, '/user/' ~ user.id ~ '/projects', 'Project', 'Projects') }}</p>
+    <p><strong>Tasks: </strong> {{ macros.length_link(user.tasks, '/user/' ~ user.id ~ '/tasks', 'Task', 'Tasks') }}</p>
 </div>
 {% endblock %}

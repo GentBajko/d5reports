@@ -15,8 +15,22 @@
           Assign to User
         </a>
     </div>
-    <p><strong>Email: </strong> {{ project.email }}</p>
+    <p><strong>Email: </strong> {{ project.email|default("") }}</p>
     <p><strong>Name: </strong> {{ project.name }}</p>
+    <p><strong>Send Email: </strong>
+      {% if project.send_email == True %}
+        <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">Yes</span>
+      {% else %}
+          <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">No</span>
+      {% endif %}
+    </p>
+    <p><strong>Archived: </strong>
+      {% if project.archived == True %}
+        <span class="bg-green-200 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">Yes</span>
+      {% else %}
+          <span class="bg-red-200 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">No</span>
+      {% endif %}
+    </p>
     <p>
       <strong>Developers: </strong>
       {{ macros.length_link(project.developers, '/project/' ~ project.id ~ '/users', 'Developer', 'Developers') }}

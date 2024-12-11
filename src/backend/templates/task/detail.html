@@ -18,13 +18,24 @@
   <p><strong>ID:</strong> {{ task.id }}</p>
   <p><strong>Title:</strong> {{ task.title }}</p>
   <p><strong>Description:</strong> {{ task.description }}</p>
+  <p><strong>Project ID:</strong> {{ task.project_id }}</p>
+  <p><strong>Project Name:</strong> {{ task.project_name }}</p>
+  <p><strong>User ID:</strong> {{ task.user_id }}</p>
+  <p><strong>User Name:</strong> {{ task.user_name }}</p>
+  <p><strong>Hours Required:</strong> {{ task.hours_required }}</p>
+  <p><strong>Hours Worked:</strong> {{ task.hours_worked }}</p>
+  <p><strong>Timestamp:</strong> {{ task.timestamp | date_to_string }}</p>
   <p>
-    <strong>Status: </strong>
-    {{ macros.render_status(task.status) }}
+    <strong>Last Updated: </strong>
+    {{ task.last_updated | date_to_string }}
   </p>
   <p>
     <strong>Logs: </strong>
     {{ macros.length_link(task.logs, '/task/' ~ task.id ~ '/logs', 'Log', 'Logs') }}
+  </p>
+  <p>
+    <strong>Status: </strong>
+    {{ macros.render_status(task.status) }}
   </p>
 </div>
 {% endblock %}
