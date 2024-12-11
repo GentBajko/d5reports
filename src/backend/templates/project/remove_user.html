@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Remove User from Project{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
+    <form method="post" action="/project/{{ project.id }}/remove_user">
+        <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
+        <div class="mb-4">
+            <label class="block text-gray-700">Select User to Remove</label>
+            <select 
+                name="user_id" 
+                class="w-full border p-2" 
+                required>
+                <option value="">Select a user...</option>
+                {{ options | safe }}
+            </select>
+        </div>
+        <button type="submit" class="bg-red-500 text-white px-4 py-2">Remove User</button>
+    </form>
+</div>
+
+{% endblock %}

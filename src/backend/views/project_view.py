@@ -201,7 +201,6 @@ def get_users_projects(
 
             total = assoc_repo.count(user_id=user_id, **kwargs)
 
-
             order_by = pagination.order_by
 
             pagination = calculate_pagination(
@@ -274,6 +273,36 @@ def assign_project_to_user(
     return ProjectResponseModel.model_validate(project_dict)
 
 
+def remove_user_from_project(
+    project_id: str, user_id: str, session: ISession
+) -> ProjectResponseModel:
+    with session as s:
+        project = Repository(s, Project).get(project_id)
+        user = Repository(s, User).get(user_id)
+        project_user_repo = Repository(s, ProjectUser)
+
+        if not project:
+            raise ValueError(f"Project with id {project_id} does not exist.")
+        if not user:
+            raise ValueError(f"User with id {user_id} does not exist.")
+
+        project_users = project_user_repo.query(
+            project_id=project_id, user_id=user_id
+        )
+        
+        if not project_users:
+            raise ValueError(
+                f"User {user_id} is not assigned to project {project_id}."
+            )
+
+        project_user = project_users[0]
+        project_user_repo.delete(project_user)
+
+        project_dict = project.to_dict()
+
+    return ProjectResponseModel.model_validate(project_dict)
+
+
 def get_user_by_project(
     session: ISession, project_id: str, pagination: Pagination, **kwargs
 ) -> Tuple[List[UserResponseModel], Pagination]:
@@ -337,7 +366,9 @@ def get_user_by_project(
 
         user_dicts = [user.to_dict() for user in users]
 
-    output = [UserResponseModel.model_validate(user_dict) for user_dict in user_dicts]
+    output = [
+        UserResponseModel.model_validate(user_dict) for user_dict in user_dicts
+    ]
 
     return output, pagination
 
@@ -397,6 +428,8 @@ def get_project_tasks(
 
         task_dicts = [task.to_dict() for task in tasks]
 
-    output = [TaskResponseModel.model_validate(task_dict) for task_dict in task_dicts]
+    output = [
+        TaskResponseModel.model_validate(task_dict) for task_dict in task_dicts
+    ]
 
     return output, pagination

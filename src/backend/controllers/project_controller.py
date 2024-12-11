@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.models import (
     ProjectCreateModel,
@@ -31,6 +31,7 @@ from backend.views.project_view import (
     get_users_projects,
     get_user_by_project,
     assign_project_to_user,
+    remove_user_from_project,
 )
 from database.interfaces.session import ISession
 
@@ -221,6 +222,70 @@ def assign_project_to_user_endpoint(
     return templates.TemplateResponse(
         "project/detail.html", {"project": assignment, "request": request}
     )
+
+
+@project_router.get("/{project_id}/remove_user", response_class=HTMLResponse)
+def remove_user_from_project_page(
+    request: Request,
+    project_id: str,
+    page: int = 1,
+    sort: Optional[str] = None,
+    order: Optional[str] = None,
+    limit: int = 50,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Endpoint to retrieve users associated with a specific project with pagination.
+    """
+    order_by = []
+    if sort:
+        sort_column = getattr(User, sort, None)
+        if sort_column:
+            if order and order.lower() == "desc":
+                order_by.append(desc(sort_column))
+            else:
+                order_by.append(asc(sort_column))
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid sort field: {sort}"
+            )
+
+    pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+
+    users, pagination = get_user_by_project(session, project_id, pagination)
+
+    options_html = "".join(
+        f'<option value="{user.id}">{user.full_name} ({user.email})</option>'
+        for user in users
+    )
+
+    context = {
+        "request": request,
+        "project": {"id": project_id},
+        "options": options_html,
+        "pagination": pagination,
+        "entity": "user",
+        "current_sort": sort,
+        "current_order": order,
+    }
+    return templates.TemplateResponse("project/remove_user.html", context)
+
+
+@project_router.post(
+    "/{project_id}/remove_user", response_model=ProjectResponseModel
+)
+def remove_user_from_project_endpoint(
+    request: Request,
+    project_id: str,
+    user_id: str = Form(...),
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    remove_user_from_project(project_id, user_id, session)
+    return RedirectResponse(url=f"/project/{project_id}", status_code=303)
 
 
 @project_router.get("/{project_id}/users", response_class=HTMLResponse)

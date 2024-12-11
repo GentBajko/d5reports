@@ -7,13 +7,22 @@
 <div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
     <div class="flex items-center justify-between mb-4">
         <h1 class="text-2xl">Project Details</h1>
-        <a
-          href="/project/{{ project.id }}/assign"
-          class="text-sm text-[#0e5c6a] hover:underline"
-          title="Assign Project to a Developer"
-        >
-          Assign to User
-        </a>
+        <div class="flex flex-col items-start">
+          <a
+            href="/project/{{ project.id }}/assign"
+            class="text-sm text-[#0e5c6a] hover:underline mb-2"
+            title="Assign Project to a Developer"
+          >
+            Assign Developer
+          </a>
+          <a
+            href="/project/{{ project.id }}/remove_user"
+            class="text-sm text-[#0e5c6a] hover:underline"
+            title="Remove Developer"
+          >
+            Remove Developer
+          </a>
+        </div>
     </div>
     <p><strong>Email: </strong> {{ project.email|default("") }}</p>
     <p><strong>Name: </strong> {{ project.name }}</p>
