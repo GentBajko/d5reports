@@ -1,9 +1,12 @@
+from io import StringIO
+import csv
 from typing import Optional
+from datetime import datetime
 
 from loguru import logger
 from fastapi import Form, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 
 from backend.models import TaskCreateModel, TaskResponseModel
 from core.models.log import Log
@@ -103,6 +106,59 @@ def get_project_options(
         options_html += f'<option value="{task.id}">{task.title}</option>'
 
     return HTMLResponse(content=options_html)
+
+
+@task_router.get("/export", response_class=StreamingResponse)
+def export_tasks_csv(
+    request: Request,
+    start_date: str,
+    end_date: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Export tasks between two dates as a CSV file.
+    """
+    try:
+        start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+        pagination = Pagination(limit=None, current_page=1, order_by=[])
+        tasks, _ = get_all_tasks(
+            session,
+            pagination,
+            timestamp__gte=int(start_datetime.timestamp()),
+            timestamp__lte=int(end_datetime.timestamp()),
+        )
+        csv_file = StringIO()
+        writer = csv.writer(csv_file)
+        writer.writerow(
+            ["ID", "Title", "User", "Project", "Status", "Timestamp"]
+        )
+        for task in tasks:
+            writer.writerow(
+                [
+                    task.id,
+                    task.title,
+                    task.user_name,
+                    task.project_name,
+                    task.status,
+                    datetime.fromtimestamp(task.timestamp).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                ]
+            )
+        csv_file.seek(0)
+        response = StreamingResponse(
+            iter([csv_file.getvalue()]),
+            media_type="text/csv",
+        )
+        response.headers["Content-Disposition"] = (
+            "attachment; filename=tasks.csv"
+        )
+        return response
+    except Exception as e:
+        logger.error(f"Error exporting tasks: {e}")
+        raise HTTPException(status_code=500, detail="Error exporting tasks")
 
 
 @task_router.get("/{task_id}", response_class=HTMLResponse)
