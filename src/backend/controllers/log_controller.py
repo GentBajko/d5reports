@@ -2,7 +2,15 @@ from typing import Optional
 from datetime import datetime
 
 from ulid import ULID
-from fastapi import Form, Depends, Query, Request, APIRouter, HTTPException
+from fastapi import (
+    Form,
+    Query,
+    Depends,
+    Request,
+    Response,
+    APIRouter,
+    HTTPException,
+)
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -38,7 +46,10 @@ def get_log_home(
     task_name: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
 ):
-    return templates.TemplateResponse("log/create.html", {"request": request, "task_id": task_id, "task_name": task_name})
+    return templates.TemplateResponse(
+        "log/create.html",
+        {"request": request, "task_id": task_id, "task_name": task_name},
+    )
 
 
 @log_router.post("/", response_class=HTMLResponse)
@@ -86,17 +97,60 @@ def get_log_endpoint(
     )
 
 
-@log_router.put("/{log_id}", response_model=LogResponseModel)
-def update_log_endpoint(
+@log_router.get("/{log_id}/edit", response_model=LogResponseModel)
+def update_project_page(
+    Request: Request,
     log_id: str,
-    log_update: LogCreateModel,
     session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
-    try:
-        log = update_log(log_id, log_update, session)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return log
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    log = get_log(session, id=log_id)
+
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+
+    return templates.TemplateResponse(
+        "log/edit.html",
+        {
+            "log": log,
+            "request": Request,
+            "current_time": datetime.now().timestamp(),
+        },
+    )
+
+
+@log_router.put("/{log_id}", response_class=HTMLResponse)
+async def update_log_endpoint(
+    request: Request,
+    log_id: str,
+    task_name: str = Form(...),
+    description: str = Form(...),
+    hours_spent_today: float = Form(...),
+    task_status: str = Form(...),
+    task_id: str = Form(...),
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    log_update = LogCreateModel(
+        id=log_id,
+        user_id=current_user.id,
+        task_name=task_name,
+        description=description,
+        hours_spent_today=hours_spent_today,
+        task_status=task_status,
+        task_id=task_id,
+    )
+
+    update_log(log_id, log_update, session)
+
+    headers = {"HX-Redirect": f"/log/{log_id}"}
+    return Response(status_code=200, headers=headers)
 
 
 @log_router.post("/upsert", response_model=LogResponseModel)
@@ -114,8 +168,8 @@ def upsert_log_endpoint(
 def get_all_logs_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = None,
-    order: Optional[str] = None,
+    sort: Optional[str] = 'Timestamp',
+    order: Optional[str] = 'desc',
     limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -123,6 +177,7 @@ def get_all_logs_endpoint(
     order_by = []
 
     sort_mapping = {
+        "ID": "id",
         "Task Name": "task_name",
         "Hours Spent Today": "hours_spent_today",
         "Task Status": "task_status",
@@ -152,6 +207,7 @@ def get_all_logs_endpoint(
         "Description",
         "Timestamp",
         "Task Status",
+        "Actions",
     ]
 
     return templates.TemplateResponse(

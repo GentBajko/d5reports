@@ -52,6 +52,7 @@ def get_log(session: ISession, **kwargs) -> LogResponseModel:
     Retrieve a single log from the database based on provided criteria.
     """
     with session as s:
+        print(kwargs)
         repo = Repository[Log](s, Log)
         log = repo.query(**kwargs)
         if not log:
@@ -75,6 +76,13 @@ def update_log(
 
         for attr, value in log_update.model_dump().items():
             setattr(log, attr, value)
+
+        task_repo = Repository(s, Task)
+        task = task_repo.get(id=log.task_id)
+        if task:
+            task.hours_worked += log_update.hours_spent_today
+            task.status = log_update.task_status
+            task_repo.update(task)
 
         s.commit()
         log_dict = log.to_dict()
@@ -142,4 +150,3 @@ def get_all_logs(
         ]
 
     return logs_list, pagination
-

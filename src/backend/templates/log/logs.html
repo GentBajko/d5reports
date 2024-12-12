@@ -55,6 +55,11 @@
           {{ row['description'] }}
         {% elif field == 'Task Status' %}
         {{ macros.render_status(row['task_status']) }}
+        {% elif field == 'Actions' %}
+          <div class="flex justify-center gap-4">
+            {{ macros.edit_svg("/log/" ~ row['id'] ~ "/edit/") }}
+            {{ macros.view_details_svg("/log/" ~ row['id']) }}
+          </div>
         {% else %}
           {{ row[key] }}
         {% endif %}
