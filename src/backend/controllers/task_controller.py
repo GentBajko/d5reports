@@ -158,8 +158,8 @@ def upsert_task_endpoint(
 def get_all_tasks_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = None,
-    order: Optional[str] = None,
+    sort: Optional[str] = "Timestamp",
+    order: Optional[str] = "desc",
     limit: int = 15,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
