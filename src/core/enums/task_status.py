@@ -4,7 +4,7 @@ from enum import Enum
 class TaskStatus(str, Enum):
     PLANNING = "Planning"
     RESEARCH = "Research"
-    IN_PROGRESS = "In Progress"
+    IMPLEMENTATION = "Implementation"
     DONE = "Done"
     CANCELLED = "Cancelled"
     ON_HOLD = "On Hold"
