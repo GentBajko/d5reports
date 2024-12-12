@@ -48,7 +48,9 @@
             {{ row['user_name'] }}
           </a>
         {% elif field == 'Timestamp' %}
-          {{ row['timestamp'] | date_to_string }}
+          <a href="/log/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">
+            {{ row['timestamp'] | date_to_string }}
+          </a>
         {% elif field == 'Hours Spent Today' %}
           {{ row['hours_spent_today'] }}
         {% elif field == 'Description' %}
