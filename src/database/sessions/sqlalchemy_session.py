@@ -51,8 +51,10 @@ class SQLAlchemySession(ISession):
             ]
             query = query.filter(*in_filters)
 
-        if filters:
-            query = query.filter_by(**filters)
+            if filters:
+                conditions = self.__get_conditions(model, **filters)
+
+            query = query.filter(*conditions)
 
         if order_by:
             query = query.order_by(*order_by)
@@ -62,10 +64,9 @@ class SQLAlchemySession(ISession):
 
         if offset is not None:
             query = query.offset(offset)
-            
+
         if options:
             query = query.options(*[joinedload(option) for option in options])
-
 
         return query.all()
 
@@ -73,7 +74,42 @@ class SQLAlchemySession(ISession):
         self._session.execute(stmt)
 
     def count(self, model: Type[T], **filters) -> int:
-        return self._session.query(model).filter_by(**filters).count()
+        query = self._session.query(model)
+        conditions = self.__get_conditions(model, **filters)
+
+        return query.filter(*conditions).count()
+
+    def __get_conditions(self, model: Type[T], **filters):
+        conditions = []
+        for key, value in filters.items():
+            if "__" in key:
+                field_name, op = key.split("__", 1)
+                column = getattr(model, field_name, None)
+                if column is None:
+                    raise AttributeError(
+                        f"Model {model} has no attribute '{field_name}'"
+                    )
+
+                if op == "gt":
+                    conditions.append(column > value)
+                elif op == "gte":
+                    conditions.append(column >= value)
+                elif op == "lt":
+                    conditions.append(column < value)
+                elif op == "lte":
+                    conditions.append(column <= value)
+                elif op == "eq":
+                    conditions.append(column == value)
+                else:
+                    raise ValueError(f"Unsupported filter operator: {op}")
+            else:
+                column = getattr(model, key, None)
+                if column is None:
+                    raise AttributeError(
+                        f"Model {model} has no attribute '{key}'"
+                    )
+                conditions.append(column == value)
+        return conditions
 
     def __enter__(self) -> "SQLAlchemySession":
         return self
