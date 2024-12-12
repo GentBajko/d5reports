@@ -35,6 +35,7 @@ class TaskCreateModel(BaseModel):
     title: str
     hours_required: float
     hours_worked: float = 0.0
+    returned: bool = False
     description: str
     status: Optional[str] = None
     timestamp: int = Field(default=int(datetime.now().timestamp()))
@@ -49,6 +50,7 @@ class TaskResponseModel(BaseModel):
     title: str
     hours_required: float
     hours_worked: float
+    returned: bool = False
     description: str
     logs: List[LogCreateModel]
     status: Optional[str] = None

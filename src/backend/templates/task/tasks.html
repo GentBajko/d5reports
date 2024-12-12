@@ -78,6 +78,9 @@
 
         {% elif field == 'Status' %}
         {{ macros.render_status(row[key]) }}
+          {% if row["returned"] %}
+            {{ macros.returned_svg() }}
+        {% endif %}
         
         {% elif field == 'Logs' %} {{ macros.length_link(row[key], '/task/' ~ row.id ~ '/logs', 'Log', 'Logs') }}
         

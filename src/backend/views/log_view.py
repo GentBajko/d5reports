@@ -4,6 +4,7 @@ import datetime
 from ulid import ULID
 
 from backend.models import LogCreateModel, LogResponseModel
+from core.enums.task_status import TaskStatus
 from core.models.log import Log
 from database.models import log_mapper  # noqa F401
 from core.models.task import Task
@@ -36,9 +37,11 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
             hours_spent_today=log.hours_spent_today,
             task_status=log.task_status,
         )
-
+        if task._status == TaskStatus.DONE and new_log._task_status != TaskStatus.DONE:
+            task.returned = True
         task.hours_worked += log.hours_spent_today
         task.status = log.task_status
+        print(task.to_dict())
         task_repo.update(task)
 
         repo.create(new_log)

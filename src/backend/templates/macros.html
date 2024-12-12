@@ -64,18 +64,33 @@
   </a>
 {% endmacro %}
 
-{% macro reopened_svg(url) %}
-<a
-  href="{{ url }}"
-  class="text-[#0e5c6a] hover:underline"
-  title="Reopened"
->
-  <svg fill="#000000" height="200px" width="200px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve">
-    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-    <g id="SVGRepo_iconCarrier">
-      <path d="M110.5,131.8C145.6,90.5,197.5,64,256,64c106.1,0,192,85.9,192,192h64C512,114.6,397.4,0,256,0 C179.8,0,111.7,33.4,64.9,86.2L0,21.3V192h170.7L110.5,131.8z M401.5,380.2c-35.2,41.3-87,67.8-145.5,67.8 c-106.1,0-192-85.9-192-192H0c0,141.4,114.6,256,256,256c76.2,0,144.3-33.4,191.1-86.2l64.9,64.9V320H341.3L401.5,380.2z M213.3,256 c0,23.6,19.1,42.7,42.7,42.7s42.7-19.1,42.7-42.7s-19.1-42.7-42.7-42.7S213.3,232.4,213.3,256z"></path>
-    </g>
-  </svg>
-</a>
+{% macro returned_svg() %}
+  <a
+    class="text-[#0e5c6a] hover:underline"
+    title="Refresh"
+  >
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-6 h-6 inline-block"
+    >
+      <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+      <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+      <g id="SVGRepo_iconCarrier"> 
+        <path 
+          d="M4.06189 13C4.02104 12.6724 4 12.3387 4 12C4 7.58172 7.58172 4 12 4C14.5006 4 16.7332 5.14727 18.2002 6.94416
+             M19.9381 11C19.979 11.3276 20 11.6613 20 12C20 16.4183 16.4183 20 12 20C9.61061 20 7.46589 18.9525 6 17.2916
+             M9 17H6V17.2916
+             M18.2002 4V6.94416
+             M18.2002 6.94416V6.99993L15.2002 7
+             M6 20V17.2916" 
+          stroke="#0e5c6a" 
+          stroke-width="2" 
+          stroke-linecap="round" 
+          stroke-linejoin="round">
+        </path> 
+      </g>
+    </svg>
+  </a>
 {% endmacro %}

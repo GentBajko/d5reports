@@ -21,6 +21,7 @@ class Task:
         description: str,
         timestamp: int,
         hours_worked: float = 0.0,
+        returned: bool = False,
         last_updated: Optional[int] = None,
         status: Optional[str] = None,
         id: Optional[str] = None,
@@ -33,6 +34,7 @@ class Task:
         self.user_name = user_name
         self.title = title
         self.hours_required = hours_required
+        self.returned = returned
         self.description = description
         self.logs = logs
         self.status = status
@@ -77,6 +79,7 @@ class Task:
                 "user_name": self.user_name,
                 "title": self.title,
                 "hours_required": self.hours_required,
+                "last_updated": self.last_updated,
                 "description": self.description,
                 "status": self.status,
                 "timestamp": self.timestamp,
@@ -94,6 +97,7 @@ class Task:
             "user_name": self.user_name,
             "title": self.title,
             "hours_required": self.hours_required,
+            "returned": self.returned,
             "description": self.description,
             "status": self.status,
             "timestamp": self.timestamp,
@@ -114,6 +118,7 @@ class Task:
             user_name=data["user_name"],
             title=data["title"],
             hours_required=data["hours_required"],
+            returned=data.get("returned", False),
             description=data["description"],
             status=data["status"],
             timestamp=data["timestamp"],
