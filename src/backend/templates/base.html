@@ -14,18 +14,16 @@
     <div class="flex">
         <div class="w-64 bg-[#002F41] shadow-md h-screen flex flex-col">
             <div class="p-4 border-b">
-                <h2 class="text-2xl font-semibold text-[#71c9ed]">
-                    <a href="/" class="text-[#71c9ed]">Division5 Reports</a>
-                </h2>
+            <a href="/" class="flex items-center">
+                <img
+                    src="https://division5.co/wp-content/uploads/2023/01/division5.svg"
+                    alt="Division5 Reports"
+                    class="h-auto"
+                >
+            </a>
             </div>
             {% if request.session.get('user_id') %}
             <div class="flex-1">
-                <!-- <div class="p-4">
-                    <form method="get" action="/">
-                        <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
-                        <button type="submit" class="text-xl font-medium mx-6 text-white hover:text-[#71c9ed] transition duration-300 ease-in-out">Dashboard</button>
-                    </form>
-                </div> -->
                 <div class="p-4">
                     <form method="get" action="/project">
                         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
