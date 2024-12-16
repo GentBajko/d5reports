@@ -1,0 +1,19 @@
+{% extends "email_base.html" %}
+
+{% block title %}Daily Report{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl">Task Report</h1>
+    </div>
+    <p><strong>Task:</strong> {{ task.title }}</p>
+    <p><strong>Description:</strong> {{ task.description }}</p>
+    <p><strong>Project:</strong> {{ task.project_name }}</p>
+    <p><strong>Hours Worked Today:</strong> {{ log.hours_spent_today }}</p>
+    <p><strong>Total Hours Worked:</strong> {{ task.hours_worked }}</p>
+    <p><strong>Status:</strong> {{ log.task_status }}</p>
+    <p><strong>Log Description:</strong> {{ log.description }}</p>
+    <p><strong>Timestamp:</strong> {{ timestamp | date_to_string }}</p>
+</div>
+{% endblock %}

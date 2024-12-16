@@ -103,7 +103,7 @@ def get_project_options(
 
     options_html = ""
     for task in tasks:
-        options_html += f'<option value="{task.id}">{task.title}</option>'
+        options_html += f'<option value="{task.id}" status="{task.status}">{task.title}</option>'
 
     return HTMLResponse(content=options_html)
 

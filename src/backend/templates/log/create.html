@@ -64,8 +64,24 @@
                 var selectedOption = select.options[select.selectedIndex];
                 if (selectedOption) {
                     document.getElementById('task_name').value = selectedOption.text;
+
+                    var status = selectedOption.getAttribute('status');
+                    var statusSelect = document.getElementsByName('task_status')[0];
+                    if (statusSelect && status) {
+                        statusSelect.value = status;
+                    }
                 }
             }
+        }
+    });
+
+    document.getElementById('task_select').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        var status = selectedOption.getAttribute('status');
+
+        var statusSelect = document.getElementsByName('task_status')[0];
+        if (statusSelect && status) {
+            statusSelect.value = status;
         }
     });
 </script>

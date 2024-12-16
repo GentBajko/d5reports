@@ -19,7 +19,8 @@ def get_current_user(
         repository = Repository(s, User)
         user = repository.get(user_id)
         if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+            return RedirectResponse(url="/user/login")
+        return user
     return user
 
 

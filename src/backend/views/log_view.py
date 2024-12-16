@@ -1,15 +1,18 @@
 from typing import List, Tuple
-import datetime
+from datetime import datetime
 
 from ulid import ULID
 
 from backend.models import LogCreateModel, LogResponseModel
-from core.enums.task_status import TaskStatus
 from core.models.log import Log
 from database.models import log_mapper  # noqa F401
 from core.models.task import Task
+from core.models.user import User
+from core.enums.task_status import TaskStatus
+from backend.utils.templates import templates
 from backend.utils.pagination import calculate_pagination
 from backend.models.pagination import Pagination
+from backend.utils.send_emails import send_email_to_user
 from database.interfaces.session import ISession
 from database.repositories.repository import Repository
 
@@ -22,14 +25,22 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
         task_repo = Repository(s, Task)
         task = task_repo.get(id=log.task_id)
 
+        user_repo = Repository(s, User)
+        user = user_repo.get(id=log.user_id)
+
+        if not user:
+            raise ValueError("User not found")
+
         if not task:
             raise ValueError("Task not found")
 
         repo = Repository(s, Log)
 
+        timestamp = int(datetime.now().timestamp())
+
         new_log = Log(
-            id=str(ULID()),
-            timestamp=int(datetime.datetime.now().timestamp()),
+            id=log.id,
+            timestamp=timestamp,
             task_id=log.task_id,
             task_name=task.title,
             description=log.description,
@@ -37,15 +48,28 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
             hours_spent_today=log.hours_spent_today,
             task_status=log.task_status,
         )
-        if task._status == TaskStatus.DONE and new_log._task_status != TaskStatus.DONE:
+        if (
+            task._status == TaskStatus.DONE
+            and new_log._task_status != TaskStatus.DONE
+        ):
             task.returned = True
         task.hours_worked += log.hours_spent_today
         task.status = log.task_status
-        print(task.to_dict())
         task_repo.update(task)
 
         repo.create(new_log)
         s.commit()
+        html_content = templates.get_template("email/log.html").render(
+            {"timestamp": timestamp, "task": task, "log": log}
+        )
+        send_email_to_user(
+            to="gent.bajko@division5.co",
+            title=(
+                f"[Division 5] Daily Report - "
+                f"{datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')}"
+            ),
+            message=html_content,
+        )
         log_data = new_log.to_dict()
     return LogResponseModel.model_validate(log_data)
 
@@ -55,7 +79,6 @@ def get_log(session: ISession, **kwargs) -> LogResponseModel:
     Retrieve a single log from the database based on provided criteria.
     """
     with session as s:
-        print(kwargs)
         repo = Repository[Log](s, Log)
         log = repo.query(**kwargs)
         if not log:
@@ -107,8 +130,7 @@ def upsert_log(log: LogResponseModel, session: ISession) -> LogResponseModel:
         else:
             new_log = Log(
                 id=log.id or str(ULID()),
-                timestamp=log.timestamp
-                or int(datetime.datetime.now().timestamp()),
+                timestamp=log.timestamp or int(datetime.now().timestamp()),
                 task_id=log.task_id,
                 task_name=log.task_name,
                 description=log.description,

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}D5 Reports{% endblock %}</title>
+</head>
+<body style="background-color: #f3f4f6; margin: 0; padding: 20px; font-family: Arial, sans-serif;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px;">
+            <img src="https://division5.co/wp-content/uploads/2023/01/division5.svg" alt="Division5 Reports" style="height: 40px;">
+        </div>
+        
+        {% block content %}
+        <!-- Content Here -->
+        {% endblock %}
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+            <p>This is an automated message from Division 5 Reports System</p>
+        </div>
+    </div>
+</body>
+</html>

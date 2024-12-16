@@ -64,8 +64,9 @@ async def create_log_endpoint(
     current_user: User = Depends(get_current_user),
     csrf_protect=Depends(validate_csrf),
 ):
+    log_id = str(ULID())
     log_data = LogCreateModel(
-        id=str(ULID()),
+        id=log_id,
         task_name=task_name,
         description=description,
         hours_spent_today=hours_spent_today,
@@ -75,10 +76,10 @@ async def create_log_endpoint(
         task_id=task_id,
     )
     try:
-        log = create_log(log_data, session)
+        create_log(log_data, session)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return RedirectResponse(f"/log/{log.id}", status_code=303)
+    return RedirectResponse(f"/log/{log_id}", status_code=303)
 
 
 @log_router.get("/{log_id}", response_class=HTMLResponse)

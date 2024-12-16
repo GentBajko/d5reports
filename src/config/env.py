@@ -5,6 +5,9 @@ class EnvironmentConfig(BaseSettings):
     API_PORT: int = Field(default=..., env="API_PORT")
     API_HOST: str = Field(default=..., env="API_HOST")
     API_URL: str = Field(default=..., env="API_URL")
+    EMAIL: str = Field(default=..., env="EMAIL")
+    EMAIL_HOST: str = Field(default=..., env="EMAIL_HOST")
+    EMAIL_PASSWORD: str = Field(default=..., env="EMAIL_PASSWORD")
 
     DB_USER: str = Field(default=..., env="DB_USER")
     DB_PASSWORD: str = Field(default=..., env="DB_PASSWORD")
