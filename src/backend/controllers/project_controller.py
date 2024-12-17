@@ -239,7 +239,7 @@ def get_all_projects_endpoint(
         "Developers",
         "Tasks",
     ]
-    print(projects[0].model_dump())
+
     return templates.TemplateResponse(
         "project/projects.html",
         {
