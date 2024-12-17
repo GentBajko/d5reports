@@ -428,7 +428,7 @@ def get_user_by_project_endpoint(
 
     context = {
         "request": request,
-        "headers": ["Full Name", "Email", "Projects", "Tasks"],
+        "headers": ["Name", "Email", "Projects", "Tasks"],
         "data": users,
         "pagination": pagination,
         "entity": "user",
@@ -471,7 +471,17 @@ def get_tasks_by_project_endpoint(
 
     context = {
         "request": request,
-        "headers": ["Title", "Hours Required", "Description", "Status"],
+        "headers": [
+            "Title",
+            "Project",
+            "Hours Required",
+            "Hours Worked",
+            "Description",
+            "Date",
+            "Status",
+            "Logs",
+            "Last Updated",
+        ],
         "data": tasks,
         "pagination": pagination,
         "entity": "task",
