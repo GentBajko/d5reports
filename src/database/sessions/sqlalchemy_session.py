@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Type, TypeVar, Optional
 
-from loguru import logger
 from sqlalchemy.orm import Session, joinedload
 
 from database.interfaces.session import ISession
