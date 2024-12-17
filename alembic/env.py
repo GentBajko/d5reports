@@ -4,6 +4,7 @@ from database.models import (
     User,  # noqa: F401
     Project,  # noqa: F401
     Log,  # noqa: F401
+    RemoteDay,  # noqa: F401
     project_developers_table,  # noqa: F401
 )
 from database.models.mapper import mapper_registry

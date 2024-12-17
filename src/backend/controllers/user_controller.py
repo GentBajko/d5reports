@@ -1,5 +1,8 @@
 import re
+import json
 from typing import Optional
+import calendar
+from datetime import date, datetime
 
 from loguru import logger
 from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
@@ -12,8 +15,10 @@ from backend.models import (
 )
 from core.models.log import Log
 from database.models import user_mapper  # noqa F401
+from database.models import remote_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
+from core.models.remote import RemoteDay
 from core.models.project import Project
 from backend.dependencies import get_session
 from backend.utils.templates import templates
@@ -394,3 +399,116 @@ def get_logs_by_user_endpoint(
         "current_order": order,
     }
     return templates.TemplateResponse("log/logs.html", context)
+
+
+@user_router.get("/{user_id}/remote", response_class=HTMLResponse)
+def get_user_remote(
+    request: Request,
+    user_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    # Optional: Access control check
+    if current_user.id != user_id and not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    today = date.today()
+    year = today.year
+    month = today.month
+
+    # Generate all days in the current month
+    _, num_days_in_month = calendar.monthrange(year, month)
+    all_days = []
+    for day_num in range(1, num_days_in_month + 1):
+        day_date = date(year, month, day_num)
+        all_days.append(day_date)
+
+    # Fetch existing remote_days for this user for the current month
+    # Using your session.query() interface:
+    existing_remote_days = session.query(
+        RemoteDay,
+        in_={},
+        user_id=user_id,
+        day__gte=date(year, month, 1),
+        day__lte=date(year, month, num_days_in_month),
+    )
+
+    # Convert existing_remote_days to a set of pure date objects for quick membership checks
+    selected_days = {rd.day for rd in existing_remote_days}
+
+    # Build list of dictionaries for template
+    days_context = []
+    for d in all_days:
+        days_context.append(
+            {
+                "date_iso": d.isoformat(),
+                "day_number": d.day,
+                "day_name": d.strftime("%A"),
+                "is_selected": d in selected_days,
+            }
+        )
+
+    return templates.TemplateResponse(
+        "user/remote.html",
+        {
+            "request": request,
+            "days": days_context,
+            "year": year,
+            "month": month,
+        },
+    )
+
+
+@user_router.post("/{user_id}/remote", response_class=HTMLResponse)
+def post_user_remote(
+    request: Request,
+    user_id: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    selected_dates: str = Form(...),  # the hidden input as JSON string
+):
+    if current_user.id != user_id and not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+
+    # Parse the JSON string of selected ISO dates
+    try:
+        date_str_list = json.loads(selected_dates)
+    except json.JSONDecodeError:
+        date_str_list = []
+
+    # Retrieve existing remote_days for the user in this month (to avoid duplicates)
+    # If your logic allows overwriting or removing old selections, you'd handle that here.
+    new_remote_days = []
+    for dt_str in date_str_list:
+        day_date = datetime.strptime(dt_str, "%Y-%m-%d").date()
+
+        # You could check for duplicates or constraints (like only 2 days per week) here:
+        # e.g. the user may only have 2 office days per ISO week. If they have more, raise an error or skip.
+
+        # Create new RemoteDay object
+        rd = RemoteDay(user_id=user_id, day=day_date)
+        new_remote_days.append(rd)
+
+    # A simple approach: let's delete existing remote_days for that month, then re-insert from scratch.
+    # (Alternatively, you can handle merges/inserts selectively.)
+    today = date.today()
+    year, month = today.year, today.month
+    session.query(
+        RemoteDay,
+        user_id=user_id,
+        day__gte=date(year, month, 1),
+        day__lte=date(year, month, calendar.monthrange(year, month)[1]),
+    )
+    # .delete() is not built into your custom session directly, so you may need session.execute or your session’s .delete() loop
+
+    for existing_rd in session.query(RemoteDay, user_id=user_id):
+        session.delete(existing_rd)
+    session.commit()
+
+    # Insert the new ones
+    for rd in new_remote_days:
+        session.add(rd)
+    session.commit()
+
+    # After saving, redirect or re-render the same page
+    return RedirectResponse(url=f"/user/{user_id}/remote", status_code=302)
