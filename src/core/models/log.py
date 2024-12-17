@@ -14,6 +14,7 @@ class Log:
         task_name: str,
         description: str,
         user_id: str,
+        user_name: str,
         hours_spent_today: float,
         task_status: str,
     ):
@@ -23,6 +24,7 @@ class Log:
         self.task_name = task_name
         self.description = description
         self.user_id = user_id
+        self.user_name = user_name
         self.hours_spent_today = hours_spent_today
         self.task_status = task_status
 
@@ -50,6 +52,7 @@ class Log:
             "task_name": self.task_name,
             "description": self.description,
             "user_id": self.user_id,
+            "user_name": self.user_name,
             "hours_spent_today": self.hours_spent_today,
             "task_status": self.task_status,
         }
@@ -63,6 +66,7 @@ class Log:
             task_name=data["task_name"],
             description=data["description"],
             user_id=data["user_id"],
+            user_name=data["user_name"],
             hours_spent_today=data["hours_spent_today"],
             task_status=data["task_status"],
         )

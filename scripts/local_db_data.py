@@ -101,10 +101,12 @@ for i in range(100):
 logs = []
 for i in range(100):
     task = choice(tasks)
+    user = choice(users)
     log = Log(
         id=str(ULID()),
         task_id=task.id,
-        user_id=choice(users).id,
+        user_id=user.id,
+        user_name=user.full_name,
         description=f"Task {i} log description",
         timestamp=int(datetime.now().timestamp()),
         hours_spent_today=i + 1,

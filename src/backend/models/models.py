@@ -12,6 +12,7 @@ class LogCreateModel(BaseModel):
     task_status: str
     id: str = Field(default=str(ULID()))
     user_id: Optional[str] = None
+    user_name: Optional[str] = None
     timestamp: int = Field(default=datetime.now().timestamp())
     task_id: str = Field(default=str(ULID()))
 
@@ -21,6 +22,7 @@ class LogResponseModel(BaseModel):
     task_name: str
     description: str
     user_id: str
+    user_name: str
     hours_spent_today: float
     task_status: str
     timestamp: int = Field(default=datetime.now().timestamp())
