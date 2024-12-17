@@ -101,6 +101,12 @@ class SQLAlchemySession(ISession):
                     conditions.append(column <= value)
                 elif op == "eq":
                     conditions.append(column == value)
+                elif op == "contains":
+                    conditions.append(column.ilike(f"%{value}%"))  # Case-insensitive
+                elif op == "startswith":
+                    conditions.append(column.ilike(f"{value}%"))
+                elif op == "endswith":
+                    conditions.append(column.ilike(f"%{value}"))
                 else:
                     raise ValueError(f"Unsupported filter operator: {op}")
             else:
