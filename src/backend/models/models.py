@@ -11,8 +11,8 @@ class LogCreateModel(BaseModel):
     hours_spent_today: float
     task_status: str
     id: str = Field(default=str(ULID()))
-    user_id: Optional[str] = None
-    user_name: Optional[str] = None
+    user_id: str
+    user_name: str
     timestamp: int = Field(default=datetime.now().timestamp())
     task_id: str = Field(default=str(ULID()))
 

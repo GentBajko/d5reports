@@ -219,6 +219,7 @@ def get_all_tasks_endpoint(
     sort: Optional[str] = "Timestamp",
     order: Optional[str] = "desc",
     limit: int = 15,
+    search: Optional[str] = None,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -245,11 +246,15 @@ def get_all_tasks_endpoint(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
+    filters = {}
+    if search:
+        filters['title__contains'] = search
+
     if is_admin(current_user):
-        tasks, pagination = get_all_tasks(session, pagination)
+        tasks, pagination = get_all_tasks(session, pagination, **filters)
     else:
         tasks, pagination = get_user_tasks(
-            session, current_user.id, pagination
+            session, current_user.id, pagination, **filters
         )
 
     table_headers = [

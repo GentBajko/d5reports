@@ -75,6 +75,7 @@ async def create_log_endpoint(
         hours_spent_today=hours_spent_today,
         task_status=task_status,
         user_id=current_user.id,
+        user_name=current_user.full_name,
         timestamp=int(datetime.now().timestamp()),
         task_id=task_id,
     )
@@ -197,6 +198,7 @@ async def update_log_endpoint(
     log_update = LogCreateModel(
         id=log_id,
         user_id=current_user.id,
+        user_name=current_user.full_name,
         task_name=task_name,
         description=description,
         hours_spent_today=hours_spent_today,
@@ -228,6 +230,7 @@ def get_all_logs_endpoint(
     sort: Optional[str] = 'Timestamp',
     order: Optional[str] = 'desc',
     limit: int = 15,
+    search: Optional[str] = None,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -253,10 +256,14 @@ def get_all_logs_endpoint(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
+    filters = {}
+    if search:
+        filters['task_name__contains'] = search
+
     if is_admin(current_user):
-        logs, pagination = get_all_logs(session, pagination)
+        logs, pagination = get_all_logs(session, pagination, **filters)
     else:
-        logs, pagination = get_user_logs(session, current_user.id, pagination)
+        logs, pagination = get_user_logs(session, current_user.id, pagination, **filters)
 
     table_headers = [
         "Task Name",
@@ -277,5 +284,6 @@ def get_all_logs_endpoint(
             "entity": "log",
             "current_sort": sort,
             "current_order": order,
+            "search": search,
         },
     )

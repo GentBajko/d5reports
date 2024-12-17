@@ -100,7 +100,7 @@ def update_log(
         log = repo.get(id=log_id)
         if not log:
             raise ValueError("Log not found")
-
+        print(log.to_dict())
         for attr, value in log_update.model_dump().items():
             setattr(log, attr, value)
 

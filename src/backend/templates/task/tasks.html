@@ -1,25 +1,41 @@
-{% extends "base.html" %}
-
-{% import "macros.html" as macros %}
-
-{% block title %}Task List{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% import "macros.html" as macros %} {% block title
+%}Task List{% endblock %} {% block content %}
 
 <h1 class="text-2xl mb-4 flex items-center">
-  Tasks
-  {{ macros.svg_link("/task/create") }}
+  Tasks {{ macros.svg_link("/task/create") }}
 </h1>
 
-<form id="csv" method="get" action="/task/export" class="mb-4 flex items-center hidden">
-  <label for="start_date" class="mr-2">Start Date:</label>
-  <input type="date" name="start_date" required class="mr-4">
-  <label for="end_date" class="mr-2">End Date:</label>
-  <input type="date" name="end_date" required class="mr-4">
-  <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
-    Export
-  </button>
-</form>
+<div class="mb-4 flex justify-between items-center gap-4">
+  <!-- Search form on the left -->
+  <form method="get" class="flex items-center gap-2">
+    <input
+      type="text"
+      name="search"
+      placeholder="Search tasks..."
+      value="{{ search or '' }}"
+      class="px-4 py-2 border rounded-lg w-64"
+    />
+    <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
+      Search
+    </button>
+  </form>
+
+  <!-- Export form on the right -->
+  <form
+    id="csv"
+    method="get"
+    action="/task/export"
+    class="flex items-center hidden"
+  >
+    <label for="start_date" class="mr-2">Start Date:</label>
+    <input type="date" name="start_date" required class="mr-4" />
+    <label for="end_date" class="mr-2">End Date:</label>
+    <input type="date" name="end_date" required class="mr-4" />
+    <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
+      Export
+    </button>
+  </form>
+</div>
 
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
   <thead>
@@ -28,17 +44,14 @@
       <th
         class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
       >
-        {% set field = header %}
-        {% if current_sort == field %}
-          {% if current_order == 'asc' %}
-            {% set next_order = 'desc' %}
-          {% else %}
-            {% set next_order = 'asc' %}
-          {% endif %}
-        {% else %}
-          {% set next_order = 'asc' %}
-        {% endif %}
-        <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
+        {% set field = header %} {% if current_sort == field %} {% if
+        current_order == 'asc' %} {% set next_order = 'desc' %} {% else %} {%
+        set next_order = 'asc' %} {% endif %} {% else %} {% set next_order =
+        'asc' %} {% endif %}
+        <a
+          href="?sort={{ field }}&order={{ next_order }}"
+          class="hover:underline"
+        >
           {{ header }}
         </a>
       </th>
@@ -72,34 +85,24 @@
           >{{ row['user_name'] }}</a
         >
 
-        {% elif field == 'Timestamp' %}
-        {{ row['timestamp'] | date_to_string }}
-
-        {% elif field == 'Last Updated' %}
-        {{ row['last_updated'] | date_to_string }}
-
-        {% elif field == 'Status' %}
-        {{ macros.render_status(row[key]) }}
-          {% if row["returned"] %}
-            {{ macros.returned_svg() }}
-        {% endif %}
-        
-        {% elif field == 'Logs' %} {{ macros.length_link(row[key], '/task/' ~ row.id ~ '/logs', 'Log', 'Logs') }}
-        
-        {% elif field == 'Hours Worked' %}
-          {% set hours = row[key] %}
-          {% set old = row['timestamp']|is_old %}
-          {% if hours > row['hours_required'] or old %}
-            <span class="text-red-500">{{ hours }}</span>
-          {% else %}
-           <span class="text-green-500">{{ hours }}</span>
-        {% endif %}
-
-        {% else %} {{ row[key] }} {% endif %}
+        {% elif field == 'Timestamp' %} {{ row['timestamp'] | date_to_string }}
+        {% elif field == 'Last Updated' %} {{ row['last_updated'] |
+        date_to_string }} {% elif field == 'Status' %} {{
+        macros.render_status(row[key]) }} {% if row["returned"] %} {{
+        macros.returned_svg() }} {% endif %} {% elif field == 'Logs' %} {{
+        macros.length_link(row[key], '/task/' ~ row.id ~ '/logs', 'Log', 'Logs')
+        }} {% elif field == 'Hours Worked' %} {% set hours = row[key] %} {% set
+        old = row['timestamp']|is_old %} {% if hours > row['hours_required'] or
+        old %}
+        <span class="text-red-500">{{ hours }}</span>
+        {% else %}
+        <span class="text-green-500">{{ hours }}</span>
+        {% endif %} {% else %} {{ row[key] }} {% endif %}
       </td>
       {% endfor %}
       <td class="w-1/12 text-center py-3 px-4">
-        {{ macros.svg_link("/log/create?task_id=" ~ row.id ~ "&task_name=" ~ row.title) }}
+        {{ macros.svg_link("/log/create?task_id=" ~ row.id ~ "&task_name=" ~
+        row.title) }}
       </td>
     </tr>
     {% endfor %}
@@ -107,15 +110,16 @@
 </table>
 
 <script>
-    fetch('/user/is_admin')
-        .then(response => response.json())
-        .then(data => {
-            if (data) {
-                document.getElementById('csv').classList.remove('hidden');
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-        });
+  fetch("/user/is_admin")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data) {
+        document.getElementById("csv").classList.remove("hidden");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
 </script>
 
 {% include "pagination.html" %} {% endblock %}

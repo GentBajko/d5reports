@@ -11,6 +11,22 @@
     {{ macros.svg_link("/project/create") }}
 </h1>
 
+<div class="mb-4 flex justify-between items-center gap-4">
+  <!-- Search form on the left -->
+  <form method="get" class="flex items-center gap-2">
+    <input
+      type="text"
+      name="search"
+      placeholder="Search logs..."
+      value="{{ search or '' }}"
+      class="px-4 py-2 border rounded-lg w-64"
+    />
+    <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
+      Search
+    </button>
+  </form>
+</div>
+
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
     <thead>
         <tr class="bg-[#002F41] text-white">

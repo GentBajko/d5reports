@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Form, Depends, Request, APIRouter, HTTPException, Response
+from fastapi import Form, Depends, Request, Response, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -179,6 +179,7 @@ def get_all_projects_endpoint(
     sort: Optional[str] = None,
     order: Optional[str] = None,
     limit: int = 15,
+    search: Optional[str] = None,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -199,11 +200,15 @@ def get_all_projects_endpoint(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
+    filters = {}
+    if search:
+        filters['name__contains'] = search
+
     if is_admin(current_user):
-        projects, pagination = get_all_projects(session, pagination)
+        projects, pagination = get_all_projects(session, pagination, **filters)
     else:
         projects, pagination = get_users_projects(
-            current_user.id, session, pagination
+            current_user.id, session, pagination, **filters
         )
 
     table_headers = [
