@@ -1,73 +1,31 @@
 {% extends "base.html" %}
-
 {% import "macros.html" as macros %}
 
 {% block title %}User List{% endblock %}
 
 {% block content %}
 
-{% set current_sort = request.query_params.get('sort') %}
-{% set current_order = request.query_params.get('order', 'asc') %}
-
 <h1 class="text-2xl mb-4">
-  Users
-  {{ macros.svg_link("/user/create") }}
+  Users {{ macros.svg_link("/user/create") }}
 </h1>
 
-<table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
-  <thead>
-    <tr class="bg-[#002F41] text-white">
-      {% for header in headers %}
-      <th
-        class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
-      >
-        {% set field = header %}
-        {% if current_sort == field %}
-          {% if current_order == 'asc' %}
-            {% set next_order = 'desc' %}
-          {% else %}
-            {% set next_order = 'asc' %}
-          {% endif %}
-        {% else %}
-          {% set next_order = 'asc' %}
-        {% endif %}
-        <a href="?sort={{ field }}&order={{ next_order }}" class="hover:underline">
-          {{ header }}
-        </a>
-      </th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody class="text-gray-700">
-    {% for row in data %}
-    <tr
-      class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100"
-    >
-      {% for field in headers %}
-      
-      {% set key = field.lower().replace(" ", "_") %}
+{% macro render_cell(row, field) %}
+  {% set key = field.lower().replace(" ", "_") %}
+  {% if field == 'Name' %}
+    <a href="/user/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">{{ row['full_name'] }}</a>
+  {% elif field == 'Projects' %}
+    {{ macros.length_link(row[key], '/user/' ~ row.id ~ '/projects', 'Project', 'Projects') }}
+  {% elif field == 'Tasks' %}
+    {{ macros.length_link(row[key], '/user/' ~ row.id ~ '/tasks', 'Task', 'Tasks') }}
+  {% else %}
+    {{ row[key] }}
+  {% endif %}
+{% endmacro %}
 
-      <td class="w-1/{{ headers|length }} text-center py-3 px-4">
-        {% if field == 'Name' %}
+{% set extra_params = "search={{ search }}&filter_field={{ filter_field }}&filter_operator={{ filter_operator }}&filter_value={{ filter_value }}&filter_value2={{ filter_value2 }}" %}
 
-        <a href="/user/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline"
-          >{{ row['full_name'] }}</a
-        >
+{% include "partials/table.html" %}
 
-        {% elif field == 'Projects' %}
+{% include "pagination.html" %}
 
-        {{ macros.length_link(row[key], '/user/' ~ row.id ~ '/projects', 'Project', 'Projects') }}
-
-        {% elif field == 'Tasks' %}
-        
-        {{ macros.length_link(row[key], '/user/' ~ row.id ~ '/tasks', 'Task', 'Tasks') }}
-
-        {% else %} {{ row[key] }} {% endif %}
-      </td>
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-{% include "pagination.html" %} {% endblock %}
+{% endblock %}

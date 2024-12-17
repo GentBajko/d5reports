@@ -1,0 +1,39 @@
+<table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
+  <thead>
+    <tr class="bg-[#002F41] text-white">
+      {% for header in headers %}
+      <th
+        class="w-1/{{ headers|length }} text-center py-3 px-4 uppercase font-semibold text-sm"
+      >
+        {% set field = header %}
+        {% if current_sort == field %}
+          {% if current_order == 'asc' %}
+            {% set next_order = 'desc' %}
+          {% else %}
+            {% set next_order = 'asc' %}
+          {% endif %}
+        {% else %}
+          {% set next_order = 'asc' %}
+        {% endif %}
+        <a
+          href="?sort={{ field }}&order={{ next_order }}&{{ extra_params }}"
+          class="hover:underline"
+        >
+          {{ header }}
+        </a>
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody class="text-gray-700">
+    {% for row in data %}
+    <tr class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100">
+      {% for field in headers %}
+      <td class="w-1/{{ headers|length }} text-center py-3 px-4">
+        {{ render_cell(row, field) }}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
