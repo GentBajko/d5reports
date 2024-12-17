@@ -1,6 +1,16 @@
+import re
 from typing import Optional
 
-from fastapi import Form, Depends, Request, Response, APIRouter, HTTPException
+from loguru import logger
+from fastapi import (
+    Form,
+    Query,
+    Depends,
+    Request,
+    Response,
+    APIRouter,
+    HTTPException,
+)
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -11,7 +21,6 @@ from backend.models import (
 from database.models import project_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
-from core.models.project import Project
 from backend.dependencies import get_session
 from backend.utils.templates import templates
 from backend.utils.pagination import calculate_pagination
@@ -118,6 +127,7 @@ def get_project_endpoint(
         "project/detail.html", {"request": request, "project": project}
     )
 
+
 @project_router.get("/{project_id}/edit", response_model=ProjectResponseModel)
 def update_project_page(
     Request: Request,
@@ -127,15 +137,16 @@ def update_project_page(
 ):
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
-    
+
     project = get_project(session, id=project_id)
-    
+
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     return templates.TemplateResponse(
         "project/edit.html", {"project": project, "request": Request}
     )
+
 
 @project_router.put("/{project_id}", response_class=HTMLResponse)
 async def update_project_endpoint(
@@ -151,12 +162,9 @@ async def update_project_endpoint(
 ):
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
-    
+
     project_update = ProjectCreateModel(
-        name=name,
-        send_email=send_email,
-        archived=archived,
-        email=email
+        name=name, send_email=send_email, archived=archived, email=email
     )
 
     update_project(project_id, project_update, session)
@@ -179,11 +187,7 @@ def get_all_projects_endpoint(
     sort: Optional[str] = None,
     order: Optional[str] = None,
     limit: int = 15,
-    search: Optional[str] = None,
-    filter_field: Optional[str] = None,
-    filter_operator: Optional[str] = None,
-    filter_value: Optional[str] = None,
-    filter_value2: Optional[str] = None,
+    combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -193,9 +197,15 @@ def get_all_projects_endpoint(
     - If the current user is an admin, retrieves all projects.
     - Otherwise, retrieves projects associated with the current user.
     """
+    filter_mapping = {
+        "Name": "name",
+        "Email": "email",
+        "Send Email": "send_email",
+        "Archived": "archived",
+    }
     order_by = []
     if sort:
-        sort_column = getattr(Project, sort, None)
+        sort_column = filter_mapping.get(sort)
         if sort_column:
             if order and order.lower() == "desc":
                 order_by.append(desc(sort_column))
@@ -205,24 +215,54 @@ def get_all_projects_endpoint(
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     filters = {}
-    if search:
-        filters['name__contains'] = search
 
-    if filter_field and filter_operator and filter_value:
-        # Map human-readable field names to model attribute names
-        filter_mapping = {
-            "Name": "name",
-            "Email": "email",
-            "Send Email": "send_email",
-            "Archived": "archived",
-        }
-        model_field = filter_mapping.get(filter_field)
-        if model_field:
-            if filter_operator == 'between' and filter_value2:
-                filters[f"{model_field}__gte"] = filter_value
-                filters[f"{model_field}__lte"] = filter_value2
+
+    operator_map = {
+        ">": "gt",
+        "<": "lt",
+        ">=": "gte",
+        "<=": "lte",
+        "=": "eq",
+        "contains": "contains",
+    }
+
+    if combined_filters:
+        mini_filters = [
+            f.strip() for f in combined_filters.split(",") if f.strip()
+        ]
+        for mf in mini_filters:
+            if " contains " in mf.lower():
+                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
+                if len(parts) == 2:
+                    field_part = parts[0].strip().title()
+                    value_part = parts[1].strip()
+                    db_field = filter_mapping.get(field_part)
+                    if db_field:
+                        filters[f"{db_field}__contains"] = value_part
+                continue
+
+            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
+            match = re.match(pattern, mf)
+            if match:
+                field_part = match.group("field").strip()
+                op_part = match.group("op").strip()
+                value_part = match.group("value").strip()
+                # Convert True/False to 1/0
+                if value_part.lower() == "yes":
+                    value_part = 1
+                elif value_part.lower() == "no":
+                    value_part = 0
+                db_field = filter_mapping.get(field_part)
+                if db_field and op_part in operator_map:
+                    op_key = operator_map[op_part]
+                    filters[f"{db_field}__{op_key}"] = value_part
             else:
-                filters[f"{model_field}__{filter_operator}"] = filter_value
+                if search_field := filter_mapping.get("Task Name"):
+                    filters[search_field + "__contains"] = mf
+                else:
+                    logger.warning(
+                        f"Could not find field for search term: {mf}"
+                    )
 
     if is_admin(current_user):
         projects, pagination = get_all_projects(session, pagination, **filters)
@@ -250,7 +290,12 @@ def get_all_projects_endpoint(
             "entity": "project",
             "current_sort": sort,
             "current_order": order,
-            "allowed_filter_fields": ["Name", "Email", "Send Email", "Archived"],
+            "allowed_filter_fields": [
+                "Name",
+                "Email",
+                "Send Email",
+                "Archived",
+            ],
         },
     )
 

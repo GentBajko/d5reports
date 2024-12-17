@@ -1,6 +1,8 @@
+import re
 from typing import Optional
 
-from fastapi import Form, Depends, Request, APIRouter, HTTPException
+from fastapi import Form, Depends, Query, Request, APIRouter, HTTPException
+from loguru import logger
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -162,18 +164,19 @@ def get_all_users_endpoint(
     sort: Optional[str] = None,
     order: Optional[str] = None,
     limit: int = 15,
+    combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     order_by = []
 
-    sort_mapping = {
+    filter_mapping = {
         "Name": "full_name",
         "Email": "email",
     }
 
     if sort:
-        sort_field = sort_mapping.get(sort)
+        sort_field = filter_mapping.get(sort)
         if sort_field:
             sort_column = getattr(User, sort_field, None)
             if sort_column:
@@ -183,6 +186,56 @@ def get_all_users_endpoint(
                     order_by.append(asc(sort_column))
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
+    
+    filters = {}
+
+
+    operator_map = {
+        ">": "gt",
+        "<": "lt",
+        ">=": "gte",
+        "<=": "lte",
+        "=": "eq",
+        "contains": "contains",
+    }
+
+    if combined_filters:
+        mini_filters = [
+            f.strip() for f in combined_filters.split(",") if f.strip()
+        ]
+        for mf in mini_filters:
+            if " contains " in mf.lower():
+                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
+                if len(parts) == 2:
+                    field_part = parts[0].strip().title()
+                    value_part = parts[1].strip()
+                    db_field = filter_mapping.get(field_part)
+                    if db_field:
+                        filters[f"{db_field}__contains"] = value_part
+                continue
+
+            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
+            match = re.match(pattern, mf)
+            if match:
+                field_part = match.group("field").strip()
+                op_part = match.group("op").strip()
+                value_part = match.group("value").strip()
+                # Convert True/False to 1/0
+                if value_part.lower() == "yes":
+                    value_part = 1
+                elif value_part.lower() == "no":
+                    value_part = 0
+                db_field = filter_mapping.get(field_part)
+                if db_field and op_part in operator_map:
+                    op_key = operator_map[op_part]
+                    filters[f"{db_field}__{op_key}"] = value_part
+            else:
+                if search_field := filter_mapping.get("Task Name"):
+                    filters[search_field + "__contains"] = mf
+                else:
+                    logger.warning(
+                        f"Could not find field for search term: {mf}"
+                    )
     users, pagination = get_all_users(session, pagination)
 
     return templates.TemplateResponse(
@@ -195,6 +248,7 @@ def get_all_users_endpoint(
             "entity": "user",
             "current_sort": sort,
             "current_order": order,
+            "allowed_filter_fields": filter_mapping.keys(),
         },
     )
 

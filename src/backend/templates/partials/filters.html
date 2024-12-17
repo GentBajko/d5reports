@@ -1,60 +1,13 @@
 <div class="mb-4 flex justify-between items-center gap-4">
   <form method="get" class="flex items-center gap-2">
-    <!-- Search Input -->
+    <!-- Single Combined Filter/Search Input -->
     <input
       type="text"
-      name="search"
-      placeholder="Search"
-      value="{{ search or '' }}"
-      class="px-4 py-2 border rounded-lg w-64"
-    />
-
-    <!-- Filter Field Dropdown -->
-    <select name="filter_field" class="px-4 py-2 border rounded-lg">
-      <option value="">-- Select Field --</option>
-      {% for header in allowed_filter_fields %}
-        <option value="{{ header }}" {% if filter_field == header %}selected{% endif %}>
-          {{ header }}
-        </option>
-      {% endfor %}
-    </select>
-
-    {% set filter_operators = [
-      {'value': 'eq', 'label': 'Equals'},
-      {'value': 'contains', 'label': 'Contains'},
-      {'value': 'gt', 'label': 'Greater Than'},
-      {'value': 'gte', 'label': 'Greater Than or Equal To'},
-      {'value': 'lt', 'label': 'Less Than'},
-      {'value': 'lte', 'label': 'Less Than or Equal To'},
-      {'value': 'between', 'label': 'Between'},
-    ] %}
-    <!-- Filter Operator Dropdown -->
-    <select name="filter_operator" class="px-4 py-2 border rounded-lg">
-      <option value="">-- Select Operator --</option>
-      {% for operator in filter_operators %}
-        <option value="{{ operator.value }}" {% if filter_operator == operator.value %}selected{% endif %}>
-          {{ operator.label }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <!-- Filter Value Inputs -->
-    <input
-      type="text"
-      name="filter_value"
-      placeholder="Filter value..."
-      value="{{ filter_value or '' }}"
-      class="px-4 py-2 border rounded-lg w-48"
-    />
-
-    <!-- Additional input for 'between' operator -->
-    <input
-      type="text"
-      name="filter_value2"
-      placeholder="And..."
-      value="{{ filter_value2 or '' }}"
-      class="px-4 py-2 border rounded-lg w-48 {% if filter_operator != 'between' %}hidden{% endif %}"
-      id="filter_value2"
+      name="combined_filters"
+      id="combined_filters_input"
+      placeholder="e.g. Date>2024-12-20,Date<2024-12-24,Hours Worked>=7,Task Name contains 9"
+      value=""
+      class="px-4 py-2 border rounded-lg w-[40rem]"
     />
 
     <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
@@ -62,8 +15,9 @@
     </button>
   </form>
 
-  {% if show_export %}
+
   <!-- Export form -->
+  {% if show_export %}
   <form
     id="csv"
     method="get"
@@ -80,27 +34,7 @@
   </form>
   {% endif %}
 </div>
-
 <script>
-  document.querySelector('select[name="filter_operator"]').addEventListener('change', function() {
-    const filterValue2 = document.getElementById('filter_value2');
-    if (this.value === 'between') {
-      filterValue2.classList.remove('hidden');
-    } else {
-      filterValue2.classList.add('hidden');
-    }
-  });
-
-  window.addEventListener('DOMContentLoaded', (event) => {
-    const operator = document.querySelector('select[name="filter_operator"]').value;
-    const filterValue2 = document.getElementById('filter_value2');
-    if (operator === 'between') {
-      filterValue2.classList.remove('hidden');
-    } else {
-      filterValue2.classList.add('hidden');
-    }
-  });
-
   fetch("/user/is_admin")
     .then((response) => response.json())
     .then((data) => {
@@ -111,4 +45,17 @@
     .catch((error) => {
       console.error("Error:", error);
     });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Parse the query parameters from the URL
+    const params = new URLSearchParams(window.location.search);
+    
+    // Get the 'combined_filters' parameter
+    const combinedFilters = params.get('combined_filters');
+    
+    // If 'combined_filters' exists, set it as the input's value
+    if (combinedFilters) {
+      document.getElementById('combined_filters_input').value = combinedFilters;
+    }
+  });
 </script>

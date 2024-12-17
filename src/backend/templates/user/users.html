@@ -9,6 +9,11 @@
   Users {{ macros.svg_link("/user/create") }}
 </h1>
 
+{% set allowed_filter_fields = headers %}
+{% set show_export = False %}
+
+{% include "partials/filters.html" %}
+
 {% macro render_cell(row, field) %}
   {% set key = field.lower().replace(" ", "_") %}
   {% if field == 'Name' %}

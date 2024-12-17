@@ -1,5 +1,6 @@
 from io import StringIO
 import csv
+import re
 from typing import Optional
 from datetime import datetime
 
@@ -239,11 +240,7 @@ def get_all_logs_endpoint(
     sort: Optional[str] = "Date",
     order: Optional[str] = "desc",
     limit: int = 15,
-    search: Optional[str] = None,
-    filter_field: Optional[str] = None,
-    filter_operator: Optional[str] = None,
-    filter_value: Optional[str] = None,
-    filter_value2: Optional[str] = None,
+    combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -270,27 +267,56 @@ def get_all_logs_endpoint(
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     filters = {}
-    if search:
-        filters["task_name__contains"] = search
 
-    if filter_field and filter_operator and filter_value:
-        # Map human-readable field names to model attribute names
-        filter_mapping = {
-            "ID": "id",
-            "Task Name": "task_name",
-            "Hours Spent Today": "hours_spent_today",
-            "Task Status": "task_status",
-            "Date": "timestamp",
-            "User": "user_name",
-            "Description": "description",
-        }
-        model_field = filter_mapping.get(filter_field)
-        if model_field:
-            if filter_operator == "between" and filter_value2:
-                filters[f"{model_field}__gte"] = filter_value
-                filters[f"{model_field}__lte"] = filter_value2
+    filter_mapping = {
+        "Date": "timestamp",
+        "Task Name": "task_name",
+        "Hours Worked": "hours_spent_today",
+        "User": "user_name",
+        "Description": "description",
+        "Task Status": "task_status",
+    }
+
+    operator_map = {
+        ">": "gt",
+        "<": "lt",
+        ">=": "gte",
+        "<=": "lte",
+        "=": "eq",
+        "contains": "contains",
+    }
+
+    if combined_filters:
+        mini_filters = [
+            f.strip() for f in combined_filters.split(",") if f.strip()
+        ]
+        for mf in mini_filters:
+            if " contains " in mf.lower():
+                # e.g. "Task Name contains 9"
+                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
+                if len(parts) == 2:
+                    field_part = parts[0].strip()
+                    value_part = parts[1].strip()
+                    db_field = filter_mapping.get(field_part)
+                    if db_field:
+                        filters[f"{db_field}__contains"] = value_part
+                continue
+
+            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
+            match = re.match(pattern, mf)
+            if match:
+                field_part = match.group("field").strip().title()
+                op_part = match.group("op").strip()
+                value_part = match.group("value").strip()
+                db_field = filter_mapping.get(field_part)
+                if db_field and op_part in operator_map:
+                    op_key = operator_map[op_part]
+                    filters[f"{db_field}__{op_key}"] = value_part
             else:
-                filters[f"{model_field}__{filter_operator}"] = filter_value
+                if search_field := filter_mapping.get("Task Name"):
+                    filters[search_field + "__contains"] = mf
+                else:
+                    logger.warning(f"Could not find field for search term: {mf}")
 
     if is_admin(current_user):
         logs, pagination = get_all_logs(session, pagination, **filters)
@@ -302,7 +328,7 @@ def get_all_logs_endpoint(
     table_headers = [
         "Task Name",
         "User",
-        "Hours Spent",
+        "Hours Worked",
         "Description",
         "Date",
         "Task Status",
@@ -319,11 +345,10 @@ def get_all_logs_endpoint(
             "entity": "log",
             "current_sort": sort,
             "current_order": order,
-            "search": search,
             "allowed_filter_fields": [
                 "Task Name",
                 "User",
-                "Hours Spent",
+                "Hours Worked",
                 "Description",
                 "Task Status",
             ],

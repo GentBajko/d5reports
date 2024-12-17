@@ -10,15 +10,6 @@
 {% set allowed_filter_fields = headers %}
 {% set show_export = True %}
 {% set export_action = "/log/export" %}
-{% set filter_operators = [
-  {'value': 'eq', 'label': 'Equals'},
-  {'value': 'contains', 'label': 'Contains'},
-  {'value': 'gt', 'label': 'Greater Than'},
-  {'value': 'gte', 'label': 'Greater Than or Equal To'},
-  {'value': 'lt', 'label': 'Less Than'},
-  {'value': 'lte', 'label': 'Less Than or Equal To'},
-  {'value': 'between', 'label': 'Between'},
-] %}
 
 {% include "partials/filters.html" %}
 {% macro render_cell(row, field) %}
@@ -35,7 +26,7 @@
     <a href="/log/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">
       {{ row['timestamp'] | date_to_string }}
     </a>
-  {% elif field == 'Hours Spent' %}
+  {% elif field == 'Hours Worked' %}
     {{ row['hours_spent_today'] }}
   {% elif field == 'Description' %}
     {{ row['description'] }}
