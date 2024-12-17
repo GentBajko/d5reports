@@ -64,7 +64,7 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
             {"timestamp": timestamp, "task": task, "log": log}
         )
         send_email_to_user(
-            to="gent.bajko@division5.co",
+            to=user.email,
             title=(
                 f"[Division 5] Daily Report - "
                 f"{datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')}"
