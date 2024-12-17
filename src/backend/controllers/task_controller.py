@@ -216,7 +216,7 @@ def upsert_task_endpoint(
 def get_all_tasks_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = "Timestamp",
+    sort: Optional[str] = "Date",
     order: Optional[str] = "desc",
     limit: int = 15,
     search: Optional[str] = None,
@@ -234,7 +234,7 @@ def get_all_tasks_endpoint(
         "Hours Required": "hours_required",
         "Hours Worked": "hours_worked",
         "Status": "status",
-        "Timestamp": "timestamp",
+        "Date": "timestamp",
         "Last Updated": "last_updated",
     }
 
@@ -262,7 +262,7 @@ def get_all_tasks_endpoint(
             "Hours Required": "hours_required",
             "Hours Worked": "hours_worked",
             "Status": "status",
-            "Timestamp": "timestamp",
+            "Date": "timestamp",
             "Last Updated": "last_updated",
             "User": "user_name",
         }
@@ -287,7 +287,7 @@ def get_all_tasks_endpoint(
         "Hours Required",
         "Hours Worked",
         "Description",
-        "Timestamp",
+        "Date",
         "Status",
         "Logs",
         "Last Updated",

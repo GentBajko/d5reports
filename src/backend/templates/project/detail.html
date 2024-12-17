@@ -31,7 +31,7 @@
           </a>
         </div>
     </div>
-    <p><strong>Email: </strong> {{ project.email|default("") }}</p>
+    <p><strong>Email: </strong> {{ project.email or "" }}</p>
     <p><strong>Name: </strong> {{ project.name }}</p>
     <p><strong>Send Email: </strong>
       {% if project.send_email == True %}

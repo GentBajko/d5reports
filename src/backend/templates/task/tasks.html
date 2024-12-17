@@ -130,7 +130,7 @@
           >{{ row['user_name'] }}</a
         >
 
-        {% elif field == 'Timestamp' %} {{ row['timestamp'] | date_to_string }}
+        {% elif field == 'Date' %} {{ row['timestamp'] | date_to_string }}
         {% elif field == 'Last Updated' %} {{ row['last_updated'] |
         date_to_string }} {% elif field == 'Status' %} {{
         macros.render_status(row[key]) }} {% if row["returned"] %} {{

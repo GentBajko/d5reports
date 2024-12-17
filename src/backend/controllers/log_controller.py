@@ -118,7 +118,7 @@ def export_tasks_csv(
                 "User",
                 "Task Status",
                 "Hours Spent",
-                "Timestamp",
+                "Date",
             ]
         )
         for log in logs:
@@ -236,7 +236,7 @@ def upsert_log_endpoint(
 def get_all_logs_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = "Timestamp",
+    sort: Optional[str] = "Date",
     order: Optional[str] = "desc",
     limit: int = 15,
     search: Optional[str] = None,
@@ -254,7 +254,7 @@ def get_all_logs_endpoint(
         "Task Name": "task_name",
         "Hours Spent Today": "hours_spent_today",
         "Task Status": "task_status",
-        "Timestamp": "timestamp",
+        "Date": "timestamp",
     }
 
     if sort:
@@ -280,7 +280,7 @@ def get_all_logs_endpoint(
             "Task Name": "task_name",
             "Hours Spent Today": "hours_spent_today",
             "Task Status": "task_status",
-            "Timestamp": "timestamp",
+            "Date": "timestamp",
             "User": "user_name",
             "Description": "description",
         }
@@ -304,7 +304,7 @@ def get_all_logs_endpoint(
         "User",
         "Hours Spent",
         "Description",
-        "Timestamp",
+        "Date",
         "Task Status",
         "Actions",
     ]

@@ -122,7 +122,7 @@
         >
           {{ row['user_name'] }}
         </a>
-        {% elif field == 'Timestamp' %}
+        {% elif field == 'Date' %}
         <a href="/log/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">
           {{ row['timestamp'] | date_to_string }}
         </a>
