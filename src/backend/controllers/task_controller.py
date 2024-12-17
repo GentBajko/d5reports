@@ -119,6 +119,8 @@ def export_tasks_csv(
     """
     Export tasks between two dates as a CSV file.
     """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
     try:
         start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
         end_datetime = datetime.strptime(end_date, "%Y-%m-%d")

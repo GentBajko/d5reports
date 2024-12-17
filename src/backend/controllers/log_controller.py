@@ -1,7 +1,10 @@
+from io import StringIO
+import csv
 from typing import Optional
 from datetime import datetime
 
 from ulid import ULID
+from loguru import logger
 from fastapi import (
     Form,
     Query,
@@ -12,7 +15,7 @@ from fastapi import (
     HTTPException,
 )
 from sqlalchemy import asc, desc
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 
 from backend.models import LogCreateModel, LogResponseModel
 from core.models.log import Log
@@ -81,6 +84,59 @@ async def create_log_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse(f"/log/{log_id}", status_code=303)
 
+@log_router.get("/export", response_class=StreamingResponse)
+def export_tasks_csv(
+    request: Request,
+    start_date: str,
+    end_date: str,
+    session: ISession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Export tasks between two dates as a CSV file.
+    """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    try:
+        start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+        pagination = Pagination(limit=None, current_page=1, order_by=[])
+        logs, _ = get_all_logs(
+            session,
+            pagination,
+            timestamp__gte=int(start_datetime.timestamp()),
+            timestamp__lte=int(end_datetime.timestamp()),
+        )
+        csv_file = StringIO()
+        writer = csv.writer(csv_file)
+        writer.writerow(
+            ["ID", "Task Name", "User", "Task Status", "Hours Spent", "Timestamp"]
+        )
+        for log in logs:
+            writer.writerow(
+                [
+                    log.id,
+                    log.task_name,
+                    log.user_name,
+                    log.task_status,
+                    log.hours_spent_today,
+                    datetime.fromtimestamp(log.timestamp).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                ]
+            )
+        csv_file.seek(0)
+        response = StreamingResponse(
+            iter([csv_file.getvalue()]),
+            media_type="text/csv",
+        )
+        response.headers["Content-Disposition"] = (
+            "attachment; filename=logs.csv"
+        )
+        return response
+    except Exception as e:
+        logger.error(f"Error exporting tasks: {e}")
+        raise HTTPException(status_code=500, detail="Error exporting tasks")
 
 @log_router.get("/{log_id}", response_class=HTMLResponse)
 def get_log_endpoint(

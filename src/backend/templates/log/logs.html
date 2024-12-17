@@ -11,6 +11,16 @@
   {{ macros.svg_link("/log/create") }}
 </h1>
 
+<form id="csv" method="get" action="/log/export" class="mb-4 flex items-center hidden">
+  <label for="start_date" class="mr-2">Start Date:</label>
+  <input type="date" name="start_date" required class="mr-4">
+  <label for="end_date" class="mr-2">End Date:</label>
+  <input type="date" name="end_date" required class="mr-4">
+  <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
+    Export
+  </button>
+</form>
+
 <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
   <thead>
     <tr class="bg-[#002F41] text-white">
@@ -71,6 +81,18 @@
     {% endfor %}
   </tbody>
 </table>
+
+<script>
+    fetch('/user/is_admin')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                document.getElementById('csv').classList.remove('hidden');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+</script>
 
 {% include "pagination.html" %}
 

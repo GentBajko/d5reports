@@ -45,6 +45,7 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
             task_name=task.title,
             description=log.description,
             user_id=task.user_id,
+            user_name=user.full_name,
             hours_spent_today=log.hours_spent_today,
             task_status=log.task_status,
         )
@@ -135,6 +136,7 @@ def upsert_log(log: LogResponseModel, session: ISession) -> LogResponseModel:
                 task_name=log.task_name,
                 description=log.description,
                 user_id=log.user_id,
+                user_name=log.user_name,
                 hours_spent_today=log.hours_spent_today,
                 task_status=log.task_status,
             )
