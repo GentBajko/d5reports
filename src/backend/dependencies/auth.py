@@ -21,7 +21,6 @@ def get_current_user(
         if not user:
             return RedirectResponse(url="/user/login")
         return user
-    return user
 
 
 def is_admin(current_user: User) -> bool:

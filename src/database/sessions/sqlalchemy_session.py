@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Type, TypeVar, Optional
 
+from loguru import logger
 from sqlalchemy.orm import Session, joinedload
 
 from database.interfaces.session import ISession
@@ -51,9 +52,8 @@ class SQLAlchemySession(ISession):
             ]
             query = query.filter(*in_filters)
 
-            if filters:
-                conditions = self.__get_conditions(model, **filters)
-
+        if filters:
+            conditions = self.__get_conditions(model, **filters)
             query = query.filter(*conditions)
 
         if order_by:
@@ -68,7 +68,9 @@ class SQLAlchemySession(ISession):
         if options:
             query = query.options(*[joinedload(option) for option in options])
 
-        return query.all()
+        results = query.all()
+        return results
+
 
     def execute(self, stmt: Any) -> None:
         self._session.execute(stmt)
