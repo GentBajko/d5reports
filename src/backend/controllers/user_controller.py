@@ -1,8 +1,8 @@
 import re
 from typing import Optional
 
-from fastapi import Form, Depends, Query, Request, APIRouter, HTTPException
 from loguru import logger
+from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -20,10 +20,10 @@ from backend.utils.templates import templates
 from backend.views.user_view import (
     get_user,
     create_user,
-    get_user_logs,
     update_user,
     upsert_user,
     get_all_users,
+    get_user_logs,
     get_user_tasks,
     authenticate_user,
     get_project_by_user,
@@ -186,9 +186,8 @@ def get_all_users_endpoint(
                     order_by.append(asc(sort_column))
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
-    
-    filters = {}
 
+    filters = {}
 
     operator_map = {
         ">": "gt",
@@ -196,7 +195,7 @@ def get_all_users_endpoint(
         ">=": "gte",
         "<=": "lte",
         "=": "eq",
-        "contains": "contains",
+        "has": "has",
     }
 
     if combined_filters:
@@ -217,7 +216,7 @@ def get_all_users_endpoint(
             pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
             match = re.match(pattern, mf)
             if match:
-                field_part = match.group("field").strip()
+                field_part = match.group("field").strip().title()
                 op_part = match.group("op").strip()
                 value_part = match.group("value").strip()
                 # Convert True/False to 1/0
@@ -334,6 +333,7 @@ def get_user_tasks_endpoint(
             "current_order": order,
         },
     )
+
 
 @user_router.get("/{user_id}/logs", response_class=HTMLResponse)
 def get_logs_by_user_endpoint(

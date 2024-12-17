@@ -1,12 +1,11 @@
-
 from io import StringIO
-import csv
 import re
+import csv
 from typing import Optional
 from datetime import datetime
 
 from loguru import logger
-from fastapi import Form, Depends, Query, Request, APIRouter, HTTPException
+from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 
@@ -266,7 +265,7 @@ def get_all_tasks_endpoint(
         ">=": "gte",
         "<=": "lte",
         "=": "eq",
-        "contains": "contains",
+        "has": "has",
     }
 
     if combined_filters:
@@ -277,7 +276,7 @@ def get_all_tasks_endpoint(
             if " contains " in mf.lower():
                 parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
                 if len(parts) == 2:
-                    field_part = parts[0].strip()
+                    field_part = parts[0].strip().title()
                     value_part = parts[1].strip()
                     db_field = filter_mapping.get(field_part)
                     if db_field:
@@ -290,6 +289,10 @@ def get_all_tasks_endpoint(
                 field_part = match.group("field").strip().title()
                 op_part = match.group("op").strip()
                 value_part = match.group("value").strip()
+                if field_part in ["Date", "Last Updated"]:
+                    value_part = datetime.strptime(
+                        value_part, "%d-%m-%Y"
+                    ).timestamp()
                 db_field = filter_mapping.get(field_part)
                 if db_field and op_part in operator_map:
                     op_key = operator_map[op_part]
@@ -298,7 +301,9 @@ def get_all_tasks_endpoint(
                 if search_field := filter_mapping.get("Task Name"):
                     filters[search_field + "__contains"] = mf
                 else:
-                    logger.warning(f"Could not find field for search term: {mf}")
+                    logger.warning(
+                        f"Could not find field for search term: {mf}"
+                    )
 
     if is_admin(current_user):
         tasks, pagination = get_all_tasks(session, pagination, **filters)
@@ -329,7 +334,14 @@ def get_all_tasks_endpoint(
             "entity": "task",
             "current_sort": sort,
             "current_order": order,
-            "allowed_filter_fields": ["Title", "Project", "Hours Required", "Hours Worked", "Status", "User"],
+            "allowed_filter_fields": [
+                "Title",
+                "Project",
+                "Hours Required",
+                "Hours Worked",
+                "Status",
+                "User",
+            ],
         },
     )
 

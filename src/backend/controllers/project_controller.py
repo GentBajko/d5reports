@@ -216,14 +216,13 @@ def get_all_projects_endpoint(
 
     filters = {}
 
-
     operator_map = {
         ">": "gt",
         "<": "lt",
         ">=": "gte",
         "<=": "lte",
         "=": "eq",
-        "contains": "contains",
+        "has": "has",
     }
 
     if combined_filters:
@@ -244,7 +243,7 @@ def get_all_projects_endpoint(
             pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
             match = re.match(pattern, mf)
             if match:
-                field_part = match.group("field").strip()
+                field_part = match.group("field").strip().title()
                 op_part = match.group("op").strip()
                 value_part = match.group("value").strip()
                 # Convert True/False to 1/0

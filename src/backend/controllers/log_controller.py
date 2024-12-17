@@ -1,6 +1,6 @@
 from io import StringIO
-import csv
 import re
+import csv
 from typing import Optional
 from datetime import datetime
 
@@ -283,7 +283,7 @@ def get_all_logs_endpoint(
         ">=": "gte",
         "<=": "lte",
         "=": "eq",
-        "contains": "contains",
+        "has": "has",
     }
 
     if combined_filters:
@@ -291,13 +291,14 @@ def get_all_logs_endpoint(
             f.strip() for f in combined_filters.split(",") if f.strip()
         ]
         for mf in mini_filters:
-            if " contains " in mf.lower():
+            if " has " in mf.lower():
                 # e.g. "Task Name contains 9"
-                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
+                parts = re.split(r"\s+has\s+", mf, flags=re.IGNORECASE)
                 if len(parts) == 2:
-                    field_part = parts[0].strip()
+                    field_part = parts[0].strip().title()
                     value_part = parts[1].strip()
                     db_field = filter_mapping.get(field_part)
+                    print(db_field, value_part, field_part)
                     if db_field:
                         filters[f"{db_field}__contains"] = value_part
                 continue
@@ -308,6 +309,8 @@ def get_all_logs_endpoint(
                 field_part = match.group("field").strip().title()
                 op_part = match.group("op").strip()
                 value_part = match.group("value").strip()
+                if field_part in ["Date"]:
+                    value_part = datetime.strptime(value_part, "%d-%m-%Y").timestamp()
                 db_field = filter_mapping.get(field_part)
                 if db_field and op_part in operator_map:
                     op_key = operator_map[op_part]
@@ -316,7 +319,9 @@ def get_all_logs_endpoint(
                 if search_field := filter_mapping.get("Task Name"):
                     filters[search_field + "__contains"] = mf
                 else:
-                    logger.warning(f"Could not find field for search term: {mf}")
+                    logger.warning(
+                        f"Could not find field for search term: {mf}"
+                    )
 
     if is_admin(current_user):
         logs, pagination = get_all_logs(session, pagination, **filters)

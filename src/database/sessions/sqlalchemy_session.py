@@ -70,7 +70,6 @@ class SQLAlchemySession(ISession):
         results = query.all()
         return results
 
-
     def execute(self, stmt: Any) -> None:
         self._session.execute(stmt)
 
@@ -102,7 +101,9 @@ class SQLAlchemySession(ISession):
                 elif op == "eq":
                     conditions.append(column == value)
                 elif op == "contains":
-                    conditions.append(column.ilike(f"%{value}%"))  # Case-insensitive
+                    conditions.append(
+                        column.ilike(f"%{value}%")
+                    )  # Case-insensitive
                 elif op == "startswith":
                     conditions.append(column.ilike(f"{value}%"))
                 elif op == "endswith":
