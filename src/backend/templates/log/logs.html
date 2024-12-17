@@ -6,8 +6,9 @@
 </h1>
 
 <div class="mb-4 flex justify-between items-center gap-4">
-  <!-- Search form on the left -->
+  <!-- Search and Advanced Filter form on the left -->
   <form method="get" class="flex items-center gap-2">
+    <!-- Search Input -->
     <input
       type="text"
       name="search"
@@ -15,8 +16,50 @@
       value="{{ search or '' }}"
       class="px-4 py-2 border rounded-lg w-64"
     />
+
+    <!-- Filter Field Dropdown -->
+    <select name="filter_field" class="px-4 py-2 border rounded-lg">
+      <option value="">-- Select Field --</option>
+      {% for header in allowed_filter_fields %}
+        <option value="{{ header }}" {% if filter_field == header %}selected{% endif %}>
+          {{ header }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <!-- Filter Operator Dropdown -->
+    <select name="filter_operator" class="px-4 py-2 border rounded-lg">
+      <option value="">-- Select Operator --</option>
+      <option value="eq" {% if filter_operator == 'eq' %}selected{% endif %}>Equals</option>
+      <option value="contains" {% if filter_operator == 'contains' %}selected{% endif %}>Contains</option>
+      <option value="gt" {% if filter_operator == 'gt' %}selected{% endif %}>Greater Than</option>
+      <option value="gte" {% if filter_operator == 'gte' %}selected{% endif %}>Greater Than or Equal To</option>
+      <option value="lt" {% if filter_operator == 'lt' %}selected{% endif %}>Less Than</option>
+      <option value="lte" {% if filter_operator == 'lte' %}selected{% endif %}>Less Than or Equal To</option>
+      <option value="between" {% if filter_operator == 'between' %}selected{% endif %}>Between</option>
+    </select>
+
+    <!-- Filter Value Inputs -->
+    <input
+      type="text"
+      name="filter_value"
+      placeholder="Filter value..."
+      value="{{ filter_value or '' }}"
+      class="px-4 py-2 border rounded-lg w-48"
+    />
+
+    <!-- Additional input for 'between' operator -->
+    <input
+      type="text"
+      name="filter_value2"
+      placeholder="And..."
+      value="{{ filter_value2 or '' }}"
+      class="px-4 py-2 border rounded-lg w-48 {% if filter_operator != 'between' %}hidden{% endif %}"
+      id="filter_value2"
+    />
+
     <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
-      Search
+      Apply
     </button>
   </form>
 
@@ -49,7 +92,7 @@
         set next_order = 'asc' %} {% endif %} {% else %} {% set next_order =
         'asc' %} {% endif %}
         <a
-          href="?sort={{ field }}&order={{ next_order }}"
+          href="?sort={{ field }}&order={{ next_order }}&search={{ search }}&filter_field={{ filter_field }}&filter_operator={{ filter_operator }}&filter_value={{ filter_value }}&filter_value2={{ filter_value2 }}"
           class="hover:underline"
         >
           {{ header }}
@@ -83,7 +126,7 @@
         <a href="/log/{{ row['id'] }}" class="text-[#0e5c6a] hover:underline">
           {{ row['timestamp'] | date_to_string }}
         </a>
-        {% elif field == 'Hours Spent Today' %} {{ row['hours_spent_today'] }}
+        {% elif field == 'Hours Spent' %} {{ row['hours_spent_today'] }}
         {% elif field == 'Description' %} {{ row['description'] }} {% elif field
         == 'Task Status' %} {{ macros.render_status(row['task_status']) }} {%
         elif field == 'Actions' %}
@@ -100,6 +143,25 @@
 </table>
 
 <script>
+  document.querySelector('select[name="filter_operator"]').addEventListener('change', function() {
+    const filterValue2 = document.getElementById('filter_value2');
+    if (this.value === 'between') {
+      filterValue2.classList.remove('hidden');
+    } else {
+      filterValue2.classList.add('hidden');
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const operator = document.querySelector('select[name="filter_operator"]').value;
+    const filterValue2 = document.getElementById('filter_value2');
+    if (operator === 'between') {
+      filterValue2.classList.remove('hidden');
+    } else {
+      filterValue2.classList.add('hidden');
+    }
+  });
+
   fetch("/user/is_admin")
     .then((response) => response.json())
     .then((data) => {

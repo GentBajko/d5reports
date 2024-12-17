@@ -180,6 +180,10 @@ def get_all_projects_endpoint(
     order: Optional[str] = None,
     limit: int = 15,
     search: Optional[str] = None,
+    filter_field: Optional[str] = None,
+    filter_operator: Optional[str] = None,
+    filter_value: Optional[str] = None,
+    filter_value2: Optional[str] = None,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -204,6 +208,22 @@ def get_all_projects_endpoint(
     if search:
         filters['name__contains'] = search
 
+    if filter_field and filter_operator and filter_value:
+        # Map human-readable field names to model attribute names
+        filter_mapping = {
+            "Name": "name",
+            "Email": "email",
+            "Send Email": "send_email",
+            "Archived": "archived",
+        }
+        model_field = filter_mapping.get(filter_field)
+        if model_field:
+            if filter_operator == 'between' and filter_value2:
+                filters[f"{model_field}__gte"] = filter_value
+                filters[f"{model_field}__lte"] = filter_value2
+            else:
+                filters[f"{model_field}__{filter_operator}"] = filter_value
+
     if is_admin(current_user):
         projects, pagination = get_all_projects(session, pagination, **filters)
     else:
@@ -219,7 +239,7 @@ def get_all_projects_endpoint(
         "Developers",
         "Tasks",
     ]
-
+    print(projects[0].model_dump())
     return templates.TemplateResponse(
         "project/projects.html",
         {
@@ -230,6 +250,7 @@ def get_all_projects_endpoint(
             "entity": "project",
             "current_sort": sort,
             "current_order": order,
+            "allowed_filter_fields": ["Name", "Email", "Send Email", "Archived"],
         },
     )
 

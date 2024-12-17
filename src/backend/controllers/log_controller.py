@@ -85,6 +85,7 @@ async def create_log_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse(f"/log/{log_id}", status_code=303)
 
+
 @log_router.get("/export", response_class=StreamingResponse)
 def export_tasks_csv(
     request: Request,
@@ -111,7 +112,14 @@ def export_tasks_csv(
         csv_file = StringIO()
         writer = csv.writer(csv_file)
         writer.writerow(
-            ["ID", "Task Name", "User", "Task Status", "Hours Spent", "Timestamp"]
+            [
+                "ID",
+                "Task Name",
+                "User",
+                "Task Status",
+                "Hours Spent",
+                "Timestamp",
+            ]
         )
         for log in logs:
             writer.writerow(
@@ -138,6 +146,7 @@ def export_tasks_csv(
     except Exception as e:
         logger.error(f"Error exporting tasks: {e}")
         raise HTTPException(status_code=500, detail="Error exporting tasks")
+
 
 @log_router.get("/{log_id}", response_class=HTMLResponse)
 def get_log_endpoint(
@@ -227,10 +236,14 @@ def upsert_log_endpoint(
 def get_all_logs_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = 'Timestamp',
-    order: Optional[str] = 'desc',
+    sort: Optional[str] = "Timestamp",
+    order: Optional[str] = "desc",
     limit: int = 15,
     search: Optional[str] = None,
+    filter_field: Optional[str] = None,
+    filter_operator: Optional[str] = None,
+    filter_value: Optional[str] = None,
+    filter_value2: Optional[str] = None,
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -258,16 +271,38 @@ def get_all_logs_endpoint(
 
     filters = {}
     if search:
-        filters['task_name__contains'] = search
+        filters["task_name__contains"] = search
+
+    if filter_field and filter_operator and filter_value:
+        # Map human-readable field names to model attribute names
+        filter_mapping = {
+            "ID": "id",
+            "Task Name": "task_name",
+            "Hours Spent Today": "hours_spent_today",
+            "Task Status": "task_status",
+            "Timestamp": "timestamp",
+            "User": "user_name",
+            "Description": "description",
+        }
+        model_field = filter_mapping.get(filter_field)
+        if model_field:
+            if filter_operator == "between" and filter_value2:
+                filters[f"{model_field}__gte"] = filter_value
+                filters[f"{model_field}__lte"] = filter_value2
+            else:
+                filters[f"{model_field}__{filter_operator}"] = filter_value
 
     if is_admin(current_user):
         logs, pagination = get_all_logs(session, pagination, **filters)
     else:
-        logs, pagination = get_user_logs(session, current_user.id, pagination, **filters)
+        logs, pagination = get_user_logs(
+            session, current_user.id, pagination, **filters
+        )
 
     table_headers = [
         "Task Name",
-        "Hours Spent Today",
+        "User",
+        "Hours Spent",
         "Description",
         "Timestamp",
         "Task Status",
@@ -285,5 +320,12 @@ def get_all_logs_endpoint(
             "current_sort": sort,
             "current_order": order,
             "search": search,
+            "allowed_filter_fields": [
+                "Task Name",
+                "User",
+                "Hours Spent",
+                "Description",
+                "Task Status",
+            ],
         },
     )

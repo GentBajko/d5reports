@@ -12,17 +12,62 @@
 </h1>
 
 <div class="mb-4 flex justify-between items-center gap-4">
-  <!-- Search form on the left -->
+  <!-- Search and Advanced Filter form on the left -->
   <form method="get" class="flex items-center gap-2">
+    <!-- Search Input -->
     <input
       type="text"
       name="search"
-      placeholder="Search logs..."
+      placeholder="Search projects..."
       value="{{ search or '' }}"
       class="px-4 py-2 border rounded-lg w-64"
     />
+
+    <!-- Filter Field Dropdown -->
+    <select name="filter_field" class="px-4 py-2 border rounded-lg">
+    <option value="" class="text-gray-400">-- Select Field --</option>
+    {% for header in headers %}
+        {% if header not in ['Actions'] %}
+        <option value="{{ header }}" {% if filter_field == header %}selected{% endif %}>
+            {{ header }}
+        </option>
+        {% endif %}
+    {% endfor %}
+    </select>
+
+    <!-- Filter Operator Dropdown -->
+    <select name="filter_operator" class="px-4 py-2 border rounded-lg">
+      <option value="">-- Select Operator --</option>
+      <option value="eq" {% if filter_operator == 'eq' %}selected{% endif %}>Equals</option>
+      <option value="contains" {% if filter_operator == 'contains' %}selected{% endif %}>Contains</option>
+      <option value="gt" {% if filter_operator == 'gt' %}selected{% endif %}>Greater Than</option>
+      <option value="gte" {% if filter_operator == 'gte' %}selected{% endif %}>Greater Than or Equal To</option>
+      <option value="lt" {% if filter_operator == 'lt' %}selected{% endif %}>Less Than</option>
+      <option value="lte" {% if filter_operator == 'lte' %}selected{% endif %}>Less Than or Equal To</option>
+      <option value="between" {% if filter_operator == 'between' %}selected{% endif %}>Between</option>
+    </select>
+
+    <!-- Filter Value Inputs -->
+    <input
+      type="text"
+      name="filter_value"
+      placeholder="Filter value..."
+      value="{{ filter_value or '' }}"
+      class="px-4 py-2 border rounded-lg w-48"
+    />
+
+    <!-- Additional input for 'between' operator -->
+    <input
+      type="text"
+      name="filter_value2"
+      placeholder="And..."
+      value="{{ filter_value2 or '' }}"
+      class="px-4 py-2 border rounded-lg w-48 {% if filter_operator != 'between' %}hidden{% endif %}"
+      id="filter_value2"
+    />
+
     <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
-      Search
+      Apply
     </button>
   </form>
 </div>
@@ -87,6 +132,26 @@
     </tbody>
 </table>
 
+<script>
+  document.querySelector('select[name="filter_operator"]').addEventListener('change', function() {
+    const filterValue2 = document.getElementById('filter_value2');
+    if (this.value === 'between') {
+      filterValue2.classList.remove('hidden');
+    } else {
+      filterValue2.classList.add('hidden');
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const operator = document.querySelector('select[name="filter_operator"]').value;
+    const filterValue2 = document.getElementById('filter_value2');
+    if (operator === 'between') {
+      filterValue2.classList.remove('hidden');
+    } else {
+      filterValue2.classList.add('hidden');
+    }
+  });
+</script>
 {% include "pagination.html" %}
 
 {% endblock %}
