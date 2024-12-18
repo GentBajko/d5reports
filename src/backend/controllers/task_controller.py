@@ -1,5 +1,4 @@
 from io import StringIO
-import re
 import csv
 from typing import Optional
 from datetime import datetime
@@ -32,6 +31,7 @@ from backend.dependencies.auth import (
     get_current_user,
 )
 from backend.models.pagination import Pagination
+from backend.utils.filter_fields import get_filters
 from database.interfaces.session import ISession
 
 task_router = APIRouter(prefix="/task")
@@ -257,53 +257,8 @@ def get_all_tasks_endpoint(
         "Last Updated": "last_updated",
         "User": "user_name",
     }
-    filters = {}
 
-    operator_map = {
-        ">": "gt",
-        "<": "lt",
-        ">=": "gte",
-        "<=": "lte",
-        "=": "eq",
-        "has": "has",
-    }
-
-    if combined_filters:
-        mini_filters = [
-            f.strip() for f in combined_filters.split(",") if f.strip()
-        ]
-        for mf in mini_filters:
-            if " contains " in mf.lower():
-                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
-                if len(parts) == 2:
-                    field_part = parts[0].strip().title()
-                    value_part = parts[1].strip()
-                    db_field = filter_mapping.get(field_part)
-                    if db_field:
-                        filters[f"{db_field}__contains"] = value_part
-                continue
-
-            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
-            match = re.match(pattern, mf)
-            if match:
-                field_part = match.group("field").strip().title()
-                op_part = match.group("op").strip()
-                value_part = match.group("value").strip()
-                if field_part in ["Date", "Last Updated"]:
-                    value_part = datetime.strptime(
-                        value_part, "%d-%m-%Y"
-                    ).timestamp()
-                db_field = filter_mapping.get(field_part)
-                if db_field and op_part in operator_map:
-                    op_key = operator_map[op_part]
-                    filters[f"{db_field}__{op_key}"] = value_part
-            else:
-                if search_field := filter_mapping.get("Task Name"):
-                    filters[search_field + "__contains"] = mf
-                else:
-                    logger.warning(
-                        f"Could not find field for search term: {mf}"
-                    )
+    filters = get_filters(combined_filters, filter_mapping, "Title", date_fields=["Date", "Last Updated"])
 
     if is_admin(current_user):
         tasks, pagination = get_all_tasks(session, pagination, **filters)

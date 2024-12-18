@@ -1,10 +1,8 @@
-import re
 import json
 from typing import Optional
 import calendar
 from datetime import date, datetime
 
-from loguru import logger
 from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
 from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +11,7 @@ from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
+from backend.utils.filter_fields import get_filters
 from core.models.log import Log
 from database.models import user_mapper  # noqa F401
 from database.models import remote_mapper  # noqa F401
@@ -192,55 +191,10 @@ def get_all_users_endpoint(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
-    filters = {}
 
-    operator_map = {
-        ">": "gt",
-        "<": "lt",
-        ">=": "gte",
-        "<=": "lte",
-        "=": "eq",
-        "has": "has",
-    }
+    filters = get_filters(combined_filters, filter_mapping, "Name")
 
-    if combined_filters:
-        mini_filters = [
-            f.strip() for f in combined_filters.split(",") if f.strip()
-        ]
-        for mf in mini_filters:
-            if " contains " in mf.lower():
-                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
-                if len(parts) == 2:
-                    field_part = parts[0].strip().title()
-                    value_part = parts[1].strip()
-                    db_field = filter_mapping.get(field_part)
-                    if db_field:
-                        filters[f"{db_field}__contains"] = value_part
-                continue
-
-            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
-            match = re.match(pattern, mf)
-            if match:
-                field_part = match.group("field").strip().title()
-                op_part = match.group("op").strip()
-                value_part = match.group("value").strip()
-                # Convert True/False to 1/0
-                if value_part.lower() == "yes":
-                    value_part = 1
-                elif value_part.lower() == "no":
-                    value_part = 0
-                db_field = filter_mapping.get(field_part)
-                if db_field and op_part in operator_map:
-                    op_key = operator_map[op_part]
-                    filters[f"{db_field}__{op_key}"] = value_part
-            else:
-                if search_field := filter_mapping.get("Task Name"):
-                    filters[search_field + "__contains"] = mf
-                else:
-                    logger.warning(
-                        f"Could not find field for search term: {mf}"
-                    )
-    users, pagination = get_all_users(session, pagination)
+    users, pagination = get_all_users(session, pagination, **filters)
 
     return templates.TemplateResponse(
         "user/users.html",

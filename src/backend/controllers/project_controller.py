@@ -1,7 +1,5 @@
-import re
 from typing import Optional
 
-from loguru import logger
 from fastapi import (
     Form,
     Query,
@@ -18,6 +16,7 @@ from backend.models import (
     ProjectCreateModel,
     ProjectResponseModel,
 )
+from backend.utils.filter_fields import get_filters
 from database.models import project_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
@@ -214,54 +213,7 @@ def get_all_projects_endpoint(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
-    filters = {}
-
-    operator_map = {
-        ">": "gt",
-        "<": "lt",
-        ">=": "gte",
-        "<=": "lte",
-        "=": "eq",
-        "has": "has",
-    }
-
-    if combined_filters:
-        mini_filters = [
-            f.strip() for f in combined_filters.split(",") if f.strip()
-        ]
-        for mf in mini_filters:
-            if " contains " in mf.lower():
-                parts = re.split(r"\s+contains\s+", mf, flags=re.IGNORECASE)
-                if len(parts) == 2:
-                    field_part = parts[0].strip().title()
-                    value_part = parts[1].strip()
-                    db_field = filter_mapping.get(field_part)
-                    if db_field:
-                        filters[f"{db_field}__contains"] = value_part
-                continue
-
-            pattern = r"^(?P<field>.*?)\s*(?P<op>>=|<=|>|<|=)\s*(?P<value>.*)$"
-            match = re.match(pattern, mf)
-            if match:
-                field_part = match.group("field").strip().title()
-                op_part = match.group("op").strip()
-                value_part = match.group("value").strip()
-                # Convert True/False to 1/0
-                if value_part.lower() == "yes":
-                    value_part = 1
-                elif value_part.lower() == "no":
-                    value_part = 0
-                db_field = filter_mapping.get(field_part)
-                if db_field and op_part in operator_map:
-                    op_key = operator_map[op_part]
-                    filters[f"{db_field}__{op_key}"] = value_part
-            else:
-                if search_field := filter_mapping.get("Task Name"):
-                    filters[search_field + "__contains"] = mf
-                else:
-                    logger.warning(
-                        f"Could not find field for search term: {mf}"
-                    )
+    filters = get_filters(combined_filters, filter_mapping, "Name")
 
     if is_admin(current_user):
         projects, pagination = get_all_projects(session, pagination, **filters)
