@@ -3,17 +3,57 @@
 {% block title %}Daily Report{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
-    <div class="flex items-center justify-between mb-4">
-        <h1 class="text-2xl">Task Report</h1>
+<div style="
+    max-width: 672px; 
+    margin: 0 auto; 
+    background-color: white; 
+    padding: 32px; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px;
+">
+    <!-- Header -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        margin-bottom: 16px;
+    ">
+        <h1 style="
+            font-size: 24px; 
+            margin: 0; 
+            font-family: Arial, sans-serif; 
+            color: #000000;
+        ">
+            Task Report
+        </h1>
     </div>
-    <p><strong>Task:</strong> {{ task.title }}</p>
-    <p><strong>Description:</strong> {{ task.description }}</p>
-    <p><strong>Project:</strong> {{ task.project_name }}</p>
-    <p><strong>Hours Worked Today:</strong> {{ log.hours_spent_today }}</p>
-    <p><strong>Total Hours Worked:</strong> {{ task.hours_worked }}</p>
-    <p><strong>Status:</strong> {{ log.task_status }}</p>
-    <p><strong>Log Description:</strong> {{ log.description }}</p>
-    <p><strong>Timestamp:</strong> {{ timestamp | date_to_string }}</p>
+
+    <!-- Task Details -->
+    <div style="line-height: 1.5; font-family: Arial, sans-serif; color: #333333;">
+        <p style="margin: 8px 0;">
+            <strong>Task:</strong> {{ task.title }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Description:</strong> {{ task.description }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Project:</strong> {{ task.project_name }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Hours Worked Today:</strong> {{ log.hours_spent_today }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Total Hours Worked:</strong> {{ task.hours_worked }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Status:</strong> {{ log.task_status }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Log Description:</strong> {{ log.description }}
+        </p>
+        <p style="margin: 8px 0;">
+            <strong>Timestamp:</strong> {{ timestamp | date_to_string }}
+        </p>
+    </div>
 </div>
 {% endblock %}

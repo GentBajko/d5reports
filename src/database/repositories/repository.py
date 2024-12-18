@@ -1,4 +1,4 @@
-from typing import Any, List, Type, Generic, TypeVar, Optional
+from typing import Any, Dict, List, Type, Generic, TypeVar, Optional
 
 from database.interfaces.session import ISession
 
@@ -33,6 +33,7 @@ class Repository(Generic[T]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         options: Optional[List[Any]] = None,
+        in_: Optional[Dict[Any, List[Any]]] = None,
         *args,
         **filters,
     ) -> List[T]:
@@ -42,6 +43,7 @@ class Repository(Generic[T]):
             limit=limit,
             offset=offset,
             options=options,
+            in_=in_,
             *args,
             **filters,
         )

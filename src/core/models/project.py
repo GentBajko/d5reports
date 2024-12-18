@@ -8,6 +8,15 @@ if TYPE_CHECKING:
 
 
 class Project:
+    if TYPE_CHECKING:
+        id: str
+        name: str
+        email: Optional[str]
+        developers: Optional[List["User"]]
+        tasks: Optional[List["Task"]]
+        send_email: bool
+        archived: bool
+    
     def __init__(
         self,
         name: str,

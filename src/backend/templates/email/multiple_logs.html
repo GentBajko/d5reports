@@ -1,0 +1,35 @@
+{% extends "email_base.html" %}
+
+{% block title %}Daily Report{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 672px; margin: 0 auto; background-color: white; padding: 32px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <!-- Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h1 style="font-size: 24px; margin: 0;">Task Report</h1>
+    </div>
+
+    <!-- Task Logs -->
+    {% for log in logs %}
+    <div style="margin-bottom: 24px;">
+        <!-- Task Header -->
+        <div style="border-bottom: 1px solid #0e5c6a; padding-bottom: 8px; margin-bottom: 16px;">
+            <h2 style="font-size: 24px; font-weight: bold; color: #0e5c6a; margin: 0 0 4px 0;">{{ log.task_name }}</h2>
+            <p style="color: #4b5563; margin: 0;">{{ log.project_name }}</p>
+        </div>
+        <!-- Task Details -->
+        <div>
+            <p style="margin: 8px 0;"><strong>Developer:</strong> {{ log.user_name }}</p>
+            <p style="margin: 8px 0;"><strong>Description:</strong> {{ log.description }}</p>
+            <p style="margin: 8px 0;"><strong>Hours Worked Today:</strong> {{ log.hours_spent_today }}</p>
+            <p style="margin: 8px 0;"><strong>Status:</strong> {{ log.task_status }}</p>
+            <p style="margin: 8px 0;"><strong>Log Description:</strong> {{ log.description }}</p>
+            <p style="margin: 8px 0;"><strong>Timestamp:</strong> {{ log.timestamp | date_to_string }}</p>
+        </div>
+    </div>
+    {% else %}
+    <p style="color: #6b7280;">No tasks available for today.</p>
+    {% endfor %}
+</div>
+{% endblock %}

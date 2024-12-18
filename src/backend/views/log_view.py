@@ -1,13 +1,15 @@
-from typing import List, Tuple
-from datetime import datetime
+from typing import Dict, List, Tuple
+from datetime import UTC, datetime, timedelta
 
 from ulid import ULID
+from loguru import logger
 
 from backend.models import LogCreateModel, LogResponseModel
 from core.models.log import Log
 from database.models import log_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
+from core.models.project import Project
 from core.enums.task_status import TaskStatus
 from backend.utils.templates import templates
 from backend.utils.pagination import calculate_pagination
@@ -181,3 +183,68 @@ def get_all_logs(
         ]
 
     return logs_list, pagination
+
+
+def get_projects_with_recent_logs(session: ISession) -> Dict[Project, List[Log]]:
+    """
+    Retrieves all projects associated with logs from the last 24 hours,
+    mapping each project to its corresponding logs.
+
+    Args:
+        session (ISession): An instance of the SQLAlchemy session interface.
+
+    Returns:
+        Dict[Project, List[Log]]: A dictionary mapping each Project to its related Logs.
+    """
+    now = datetime.now(UTC)
+    past_24h = now - timedelta(hours=24)
+    past_24h_timestamp = int(past_24h.timestamp())
+
+    log_repository = Repository(session, Log)
+    project_repository = Repository(session, Project)
+
+    recent_logs = log_repository.query(timestamp__gte=past_24h_timestamp)
+
+
+    logs_by_project_id: Dict[str, List[Log]] = {}
+    for log in recent_logs:
+        logs_by_project_id.setdefault(log.project_id, []).append(log)
+
+    project_ids = list(logs_by_project_id.keys())
+
+    if not project_ids:
+        logger.warning("No projects associated with recent logs.")
+        return {}
+
+    projects = project_repository.query(in_={Project.id: project_ids})
+
+    logger.info(f"Found {len(recent_logs)} logs from the last 24 hours for {len(project_ids)} projects.")
+
+    projects_map: Dict[str, Project] = {project.id: project for project in projects}
+
+    # Map each Project to its corresponding Logs
+    projects_with_logs: Dict[Project, List[Log]] = {}
+    for project_id, logs in logs_by_project_id.items():
+        project = projects_map.get(project_id)
+        if project:
+            projects_with_logs[project] = logs
+        else:
+            print(f"Warning: Project ID {project_id} not found in projects.")
+
+    timestamp = int(datetime.now().timestamp())
+
+    for project, logs in projects_with_logs.items():
+        html = templates.get_template("email/multiple_logs.html").render(
+            logs=logs,
+        )
+        if project.email and project.name == "Project 0":
+            send_email_to_user(
+                to=project.email,
+                title=(
+                    f"[Division 5] Daily Project Report - "
+                    f"{datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')}"
+                ),
+                message=html,
+            )
+
+    return projects_with_logs
