@@ -23,6 +23,8 @@ class LogResponseModel(BaseModel):
     description: str
     user_id: str
     user_name: str
+    project_id: str
+    project_name: str
     hours_spent_today: float
     task_status: str
     timestamp: int = Field(default=datetime.now().timestamp())

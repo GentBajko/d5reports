@@ -46,6 +46,8 @@ def create_log(log: LogCreateModel, session: ISession) -> LogResponseModel:
             description=log.description,
             user_id=task.user_id,
             user_name=user.full_name,
+            project_id=task.project_id,
+            project_name=task.project_name,
             hours_spent_today=log.hours_spent_today,
             task_status=log.task_status,
         )
@@ -100,7 +102,7 @@ def update_log(
         log = repo.get(id=log_id)
         if not log:
             raise ValueError("Log not found")
-        print(log.to_dict())
+
         for attr, value in log_update.model_dump().items():
             setattr(log, attr, value)
 
@@ -137,6 +139,8 @@ def upsert_log(log: LogResponseModel, session: ISession) -> LogResponseModel:
                 description=log.description,
                 user_id=log.user_id,
                 user_name=log.user_name,
+                project_id=log.project_id,
+                project_name=log.project_name,
                 hours_spent_today=log.hours_spent_today,
                 task_status=log.task_status,
             )

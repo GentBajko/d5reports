@@ -14,6 +14,8 @@ task_log_table = Table(
     Column("description", String(255), nullable=True),
     Column("user_id", String(26), ForeignKey("user.id"), nullable=False),
     Column("user_name", String(50), nullable=False),
+    Column("project_id", String(26), ForeignKey("project.id"), nullable=False),
+    Column("project_name", String(100), nullable=False),
     Column("hours_spent_today", Float, nullable=False),
     Column("task_status", String(50), nullable=False),
 )

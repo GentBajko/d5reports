@@ -107,6 +107,8 @@ for i in range(100):
         task_id=task.id,
         user_id=user.id,
         user_name=user.full_name,
+        project_id=task.project_id,
+        project_name=task.project_name,
         description=f"Task {i} log description",
         timestamp=int(datetime.now().timestamp()),
         hours_spent_today=i + 1,

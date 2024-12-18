@@ -15,6 +15,8 @@ class Log:
         description: str,
         user_id: str,
         user_name: str,
+        project_id: str,
+        project_name: str,
         hours_spent_today: float,
         task_status: str,
     ):
@@ -25,6 +27,8 @@ class Log:
         self.description = description
         self.user_id = user_id
         self.user_name = user_name
+        self.project_id = project_id
+        self.project_name = project_name
         self.hours_spent_today = hours_spent_today
         self.task_status = task_status
 
@@ -41,6 +45,14 @@ class Log:
         return ULID.from_str(self.task_id)
 
     @property
+    def _user_id(self) -> ULID:
+        return ULID.from_str(self.user_id)
+
+    @property
+    def _project_id(self) -> ULID:
+        return ULID.from_str(self.project_id)
+
+    @property
     def _task_status(self) -> TaskStatus:
         return TaskStatus(self.task_status)
 
@@ -53,6 +65,8 @@ class Log:
             "description": self.description,
             "user_id": self.user_id,
             "user_name": self.user_name,
+            "project_id": self.project_id,
+            "project_name": self.project_name,
             "hours_spent_today": self.hours_spent_today,
             "task_status": self.task_status,
         }
@@ -67,6 +81,8 @@ class Log:
             description=data["description"],
             user_id=data["user_id"],
             user_name=data["user_name"],
+            project_id=data["project_id"],
+            project_name=data["project_name"],
             hours_spent_today=data["hours_spent_today"],
             task_status=data["task_status"],
         )

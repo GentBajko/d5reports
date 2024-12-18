@@ -277,6 +277,7 @@ def get_all_tasks_endpoint(
         "Status",
         "Logs",
         "Last Updated",
+        "Actions",
     ]
 
     return templates.TemplateResponse(
