@@ -237,7 +237,7 @@ def get_projects_with_recent_logs(session: ISession) -> Dict[Project, List[Log]]
         html = templates.get_template("email/multiple_logs.html").render(
             logs=logs,
         )
-        if project.email and project.name == "Project 0":
+        if project.email:
             send_email_to_user(
                 to=project.email,
                 title=(
