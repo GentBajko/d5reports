@@ -3,11 +3,15 @@ import secrets
 from loguru import logger
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import RedirectResponse
+from fastapi.concurrency import asynccontextmanager
+from apscheduler.triggers.cron import CronTrigger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config.env import ENV
+from backend.views.log_view import get_projects_with_recent_logs
 from backend.controllers.log_controller import log_router
 from backend.controllers.task_controller import task_router
 from backend.controllers.user_controller import user_router
@@ -15,8 +19,35 @@ from backend.controllers.project_controller import project_router
 from backend.controllers.dashboard_controller import dashboard_router
 from backend.controllers.healthcheck_controller import healthcheck_router
 
-app = FastAPI(title="Division5 Reports API", version="0.1.0")
+scheduler = AsyncIOScheduler()
 
+async def scheduled_get_projects_with_recent_logs():
+    try:
+        await get_projects_with_recent_logs()
+        logger.info("Emails send to clients successfully.")
+    except Exception as e:
+        logger.error(f"Error running scheduled task: {e}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Configure the trigger for daily at 11:59 PM
+    trigger = CronTrigger(hour=23, minute=57)
+
+    # Add the asynchronous job to the scheduler
+    scheduler.add_job(
+        scheduled_get_projects_with_recent_logs,
+        trigger,
+        id="daily_project_log_job",
+        name="Daily Project Logs Retrieval and Email Sending",
+        replace_existing=True,
+    )
+
+    scheduler.start()
+    logger.info("APScheduler started and job added.")
+
+    yield
+
+app = FastAPI(title="Division5 Reports API", version="0.1.0")
 
 class LogRequestMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):

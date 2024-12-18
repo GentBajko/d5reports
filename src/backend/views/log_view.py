@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from ulid import ULID
 from loguru import logger
 
+from backend.dependencies.db_session import get_session
 from backend.models import LogCreateModel, LogResponseModel
 from core.models.log import Log
 from database.models import log_mapper  # noqa F401
@@ -185,7 +186,7 @@ def get_all_logs(
     return logs_list, pagination
 
 
-def get_projects_with_recent_logs(session: ISession) -> Dict[Project, List[Log]]:
+async def get_projects_with_recent_logs() -> Dict[Project, List[Log]]:
     """
     Retrieves all projects associated with logs from the last 24 hours,
     mapping each project to its corresponding logs.
@@ -196,6 +197,7 @@ def get_projects_with_recent_logs(session: ISession) -> Dict[Project, List[Log]]
     Returns:
         Dict[Project, List[Log]]: A dictionary mapping each Project to its related Logs.
     """
+    session = await get_session()
     now = datetime.now(UTC)
     past_24h = now - timedelta(hours=24)
     past_24h_timestamp = int(past_24h.timestamp())
