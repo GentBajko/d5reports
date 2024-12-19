@@ -8,27 +8,45 @@
     <form method="post" action="/project/">
         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
         <div class="mb-4">
-            <label class="block text-gray-700">Name</label>
-            <input type="text" name="name" class="w-full border p-2" required>
+            <label class="block text-gray-700" for="name">Name</label>
+            <input type="text" id="name" name="name" class="w-full border p-2" required>
         </div>
         <div class="mb-4">
-            <label class="block text-gray-700">Email</label>
-            <input type="email" name="email" class="w-full border p-2">
+            <label class="block text-gray-700" for="email">Email</label>
+            <input type="email" id="email" name="email" class="w-full border p-2">
         </div>
         <div class="mb-4 flex items-center">
-            <label class="text-gray-700 mr-2">Send Emails?</label>
+            <label class="text-gray-700 mr-2" for="send_email">Send Emails?</label>
             <input type="hidden" name="send_email" value="False">
-            <input type="checkbox" name="send_email" value="True" class="border p-2">
+            <input type="checkbox" id="send_email" name="send_email" value="True" class="border p-2">
         </div>
         <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create Project</button>
     </form>
-    <script>
-        document.querySelector('form').addEventListener('submit', function() {
-            const emailField = document.querySelector('input[name="email"]');
-            if (!emailField.value.trim()) {
-                emailField.removeAttribute('name');
-            }
-        });
-    </script>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sendEmailCheckbox = document.getElementById('send_email');
+        const emailField = document.getElementById('email');
+
+        function toggleEmailRequirement() {
+            if (sendEmailCheckbox.checked) {
+                emailField.required = true;
+            } else {
+                emailField.required = false;
+            }
+        }
+
+        toggleEmailRequirement();
+
+        sendEmailCheckbox.addEventListener('change', toggleEmailRequirement);
+    });
+
+    document.querySelector('form').addEventListener('submit', function() {
+        const emailField = document.querySelector('input[name="email"]');
+        if (!emailField.value.trim()) {
+            emailField.removeAttribute('name');
+        }
+    });
+</script>
 {% endblock %}
