@@ -9,56 +9,88 @@
     <form 
         hx-put="/project/{{ project.id }}" 
         hx-trigger="submit" 
-        hx-include="[name='csrftoken']"
+        hx-include="[name='csrftoken']" 
         id="edit-project-form"
     >
+
         <input type="hidden" name="csrftoken" value="{{ request.session.get('csrftoken', '') }}">
         
+
         <div class="mb-4">
-            <label class="block text-gray-700">Project Name</label>
+            <label class="block text-gray-700" for="name">Project Name</label>
             <input 
                 type="text" 
+                id="name"
                 name="name" 
                 class="w-full border p-2" 
                 value="{{ project.name }}" 
                 required
             >
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700">Send Email</label>
+
+        <div class="mb-4 flex items-center">
+            <label class="text-gray-700 mr-2" for="send_email">Send Email</label>
+
+            <input type="hidden" name="send_email" value="False">
             <input 
                 type="checkbox" 
+                id="send_email" 
                 name="send_email" 
+                value="True" 
                 class="mr-2" 
                 {% if project.send_email %}checked{% endif %}
             >
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700">Archived</label>
+
+        <div class="mb-4 flex items-center">
+            <label class="text-gray-700 mr-2" for="archived">Archived</label>
+            <input 
+                type="hidden" name="archived" value="False">
             <input 
                 type="checkbox" 
+                id="archived" 
                 name="archived" 
+                value="True" 
                 class="mr-2" 
                 {% if project.archived %}checked{% endif %}
             >
         </div>
-        
+
         <div class="mb-4">
-            <label class="block text-gray-700">Email</label>
+            <label class="block text-gray-700" for="email">Email</label>
             <input 
                 type="email" 
+                id="email"
                 name="email" 
                 class="w-full border p-2" 
                 value="{{ project.email or '' }}"
+                {% if project.send_email %}required{% endif %} 
             >
         </div>
-        
+
         <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded-sm">Update Project</button>
     </form>
 
     <div id="project-details">
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sendEmailCheckbox = document.getElementById('send_email');
+        const emailField = document.getElementById('email');
+
+        function toggleEmailRequirement() {
+            if (sendEmailCheckbox.checked) {
+                emailField.required = true;
+            } else {
+                emailField.required = false
+            }
+        }
+
+        toggleEmailRequirement();
+
+        sendEmailCheckbox.addEventListener('change', toggleEmailRequirement);
+    });
+</script>
 {% endblock %}
