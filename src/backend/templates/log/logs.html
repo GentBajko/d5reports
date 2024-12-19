@@ -42,7 +42,24 @@
   {% endif %}
 {% endmacro %}
 
-{% set extra_params = "search={{ search }}&filter_field={{ filter_field }}&filter_operator={{ filter_operator }}&filter_value={{ filter_value }}&filter_value2={{ filter_value2 }}" %}
+{% set extra_params_list = [] %}
+{% if search and search|length > 0 %}
+  {% set _ = extra_params_list.append("search=" ~ search|urlencode) %}
+{% endif %}
+{% if filter_field and filter_field|length > 0 %}
+  {% set _ = extra_params_list.append("filter_field=" ~ filter_field|urlencode) %}
+{% endif %}
+{% if filter_operator and filter_operator|length > 0 %}
+  {% set _ = extra_params_list.append("filter_operator=" ~ filter_operator|urlencode) %}
+{% endif %}
+{% if filter_value and filter_value|length > 0 %}
+  {% set _ = extra_params_list.append("filter_value=" ~ filter_value|urlencode) %}
+{% endif %}
+{% if filter_value2 and filter_value2|length > 0 %}
+  {% set _ = extra_params_list.append("filter_value2=" ~ filter_value2|urlencode) %}
+{% endif %}
+
+{% set extra_params = extra_params_list|join("&") %}
 
 {% include "partials/table.html" %}
 
