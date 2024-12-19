@@ -10,6 +10,15 @@ if TYPE_CHECKING:
 
 
 class User:
+    if TYPE_CHECKING:
+        id: str
+        email: str
+        password: str
+        full_name: str
+        permissions: int
+        projects: Optional[List["Project"]]
+        tasks: Optional[List["Task"]]
+
     def __init__(
         self,
         email: str,

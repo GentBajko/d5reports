@@ -16,7 +16,8 @@ from backend.models import (
     ProjectCreateModel,
     ProjectResponseModel,
 )
-from backend.utils.filter_fields import get_filters
+from backend.utils.filters_and_sort import get_filters, get_sorting
+from core.models.project import Project
 from database.models import project_mapper  # noqa F401
 from core.models.task import Task
 from core.models.user import User
@@ -202,15 +203,15 @@ def get_all_projects_endpoint(
         "Send Email": "send_email",
         "Archived": "archived",
     }
-    order_by = []
-    if sort:
-        sort_column = filter_mapping.get(sort)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
+    
+    sort_mapping = {
+        "Name": Project.name,
+        "Email": Project.email,
+        "Send Email": Project.send_email,
+        "Archived": Project.archived,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     filters = get_filters(combined_filters, filter_mapping, "Name")

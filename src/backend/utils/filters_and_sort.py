@@ -1,8 +1,9 @@
-from datetime import datetime
 import re
 from typing import Dict, List, Optional
+from datetime import datetime
 
 from loguru import logger
+from sqlalchemy import asc, desc
 
 
 def get_filters(combined_filters: Optional[str], filter_mapping: Dict[str, str], default_field: str, date_fields: Optional[List[str]] = None):
@@ -56,3 +57,15 @@ def get_filters(combined_filters: Optional[str], filter_mapping: Dict[str, str],
                         f"Could not find field for search term: {mf}"
                     )
     return filters
+
+def get_sorting(sort: Optional[str], order: Optional[str], sort_mapping: Dict[str, str]):
+    order_by = []
+    if sort:
+        sort_field = sort_mapping.get(sort)
+        if sort_field:
+            if sort_field:
+                if order and order.lower() == "desc":
+                    order_by.append(desc(sort_field))
+                else:
+                    order_by.append(asc(sort_field))
+    return order_by

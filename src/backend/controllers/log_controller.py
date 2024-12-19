@@ -14,7 +14,6 @@ from fastapi import (
     APIRouter,
     HTTPException,
 )
-from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 
 from backend.models import LogCreateModel, LogResponseModel
@@ -37,7 +36,7 @@ from backend.dependencies.auth import (
     get_current_user,
 )
 from backend.models.pagination import Pagination
-from backend.utils.filter_fields import get_filters
+from backend.utils.filters_and_sort import get_filters, get_sorting
 from database.interfaces.session import ISession
 
 log_router = APIRouter(prefix="/log")
@@ -244,25 +243,15 @@ def get_all_logs_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-
     sort_mapping = {
-        "ID": "id",
-        "Task Name": "task_name",
-        "Hours Spent Today": "hours_spent_today",
-        "Task Status": "task_status",
-        "Date": "timestamp",
+        "ID": Log.id,
+        "Task Name": Log.task_name,
+        "Hours ": Log.hours_spent_today,
+        "Task Status": Log.task_status,
+        "Date": Log.timestamp,
     }
 
-    if sort:
-        sort_field = sort_mapping.get(sort)
-        if sort_field:
-            sort_column = getattr(Log, sort_field, None)
-            if sort_column:
-                if order and order.lower() == "desc":
-                    order_by.append(desc(sort_column))
-                else:
-                    order_by.append(asc(sort_column))
+    order_by = get_sorting(sort, order, sort_mapping)
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 

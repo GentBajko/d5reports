@@ -11,10 +11,11 @@ from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
-from backend.utils.filter_fields import get_filters
 from core.models.log import Log
-from database.models import user_mapper  # noqa F401
-from database.models import remote_mapper  # noqa F401
+from database.models import (
+    user_mapper,  # noqa F401
+    remote_mapper,  # noqa F401
+)
 from core.models.task import Task
 from core.models.user import User
 from core.models.remote import RemoteDay
@@ -38,6 +39,7 @@ from backend.dependencies.auth import (
     get_current_user,
 )
 from backend.models.pagination import Pagination
+from backend.utils.filters_and_sort import get_filters, get_sorting
 from database.interfaces.session import ISession
 
 user_router = APIRouter(prefix="/user")
@@ -172,23 +174,17 @@ def get_all_users_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-
     filter_mapping = {
         "Name": "full_name",
         "Email": "email",
     }
 
-    if sort:
-        sort_field = filter_mapping.get(sort)
-        if sort_field:
-            sort_column = getattr(User, sort_field, None)
-            if sort_column:
-                if order and order.lower() == "desc":
-                    order_by.append(desc(sort_column))
-                else:
-                    order_by.append(asc(sort_column))
+    sort_mapping = {
+        "Name": User.full_name,
+        "Email": User.email,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
 

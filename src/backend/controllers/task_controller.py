@@ -31,7 +31,7 @@ from backend.dependencies.auth import (
     get_current_user,
 )
 from backend.models.pagination import Pagination
-from backend.utils.filter_fields import get_filters
+from backend.utils.filters_and_sort import get_filters, get_sorting
 from database.interfaces.session import ISession
 
 task_router = APIRouter(prefix="/task")
@@ -224,27 +224,16 @@ def get_all_tasks_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-
     sort_mapping = {
-        "Title": "title",
-        "Hours Required": "hours_required",
-        "Hours Worked": "hours_worked",
-        "Status": "status",
-        "Date": "timestamp",
-        "Last Updated": "last_updated",
+        "Title": Task.title,
+        "Hours Required": Task.hours_required,
+        "Hours Worked": Task.hours_worked,
+        "Status": Task.status,
+        "Date": Task.timestamp,
+        "Last Updated": Task.last_updated,
     }
 
-    if sort:
-        sort_field = sort_mapping.get(sort)
-        if sort_field:
-            sort_column = getattr(Task, sort_field, None)
-            if sort_column:
-                if order and order.lower() == "desc":
-                    order_by.append(desc(sort_column))
-                else:
-                    order_by.append(asc(sort_column))
-
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     filter_mapping = {

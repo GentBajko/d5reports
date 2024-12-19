@@ -10,6 +10,22 @@ if TYPE_CHECKING:
 
 
 class Task:
+    if TYPE_CHECKING:
+        id: str
+        project_id: str
+        project_name: str
+        user_id: str
+        user_name: str
+        title: str
+        hours_required: float
+        returned: bool
+        description: str
+        status: Optional[str]
+        timestamp: int
+        hours_worked: float
+        last_updated: Optional[int]
+        logs: Optional[List["Log"]]
+
     def __init__(
         self,
         project_id: str,

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ulid import ULID
 
@@ -6,6 +7,19 @@ from core.enums.task_status import TaskStatus
 
 
 class Log:
+    if TYPE_CHECKING:
+        id: str
+        timestamp: int
+        task_id: str
+        task_name: str
+        description: str
+        user_id: str
+        user_name: str
+        project_id: str
+        project_name: str
+        hours_spent_today: float
+        task_status: str
+    
     def __init__(
         self,
         id: str,
