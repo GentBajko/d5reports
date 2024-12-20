@@ -199,17 +199,13 @@ def get_users_projects(
         with session as s:
             assoc_repo = Repository(s, ProjectUser)
 
-            total = assoc_repo.count(user_id=user_id, **kwargs)
-
-            order_by = pagination.order_by
+            total = assoc_repo.count(user_id=user_id)
 
             pagination = calculate_pagination(
                 total=total,
                 page=pagination.current_page or 1,
                 per_page=pagination.limit or 15,
             )
-
-            pagination.order_by = order_by
 
             if total == 0:
                 return [], pagination
@@ -219,7 +215,6 @@ def get_users_projects(
                 order_by=pagination.order_by,
                 limit=pagination.limit,
                 offset=pagination.offset,
-                **kwargs,
             )
 
             project_ids = [assoc.project_id for assoc in associations]
@@ -232,6 +227,8 @@ def get_users_projects(
             projects = project_repo.query(
                 in_={Project.id: project_ids},  # type: ignore
                 options=[Project.developers, Project.tasks],  # type: ignore
+                order_by=pagination.order_by,
+                **kwargs,
             )
 
             if not projects:
@@ -247,7 +244,7 @@ def get_users_projects(
         return output, pagination
 
     except Exception as e:
-        logger.error(f"Error retrieving projects for user {user_id}: {str(e)}")
+        logger.exception(f"Error retrieving projects for user {user_id}: {str(e)}")
         return [], pagination
 
 

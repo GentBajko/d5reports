@@ -184,8 +184,8 @@ def upsert_project_endpoint(
 def get_all_projects_endpoint(
     request: Request,
     page: int = 1,
-    sort: Optional[str] = None,
-    order: Optional[str] = None,
+    sort: Optional[str] = "Name",
+    order: Optional[str] = "desc",
     limit: int = 15,
     combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
