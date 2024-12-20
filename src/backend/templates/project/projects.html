@@ -6,7 +6,10 @@
 {% block content %}
 
 <h1 class="text-2xl mb-4 flex items-center">
-    Projects {{ macros.svg_link("/project/create") }}
+    Projects
+    <span id="create" class="hidden">
+        {{ macros.svg_link("/project/create") }}
+    </span>
 </h1>
 
 {% set allowed_filter_fields = headers %}
@@ -68,5 +71,16 @@
 
 {% include "partials/table.html" %}
 {% include "pagination.html" %}
-
+<script>
+  fetch("/user/is_admin")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data) {
+        document.getElementById("create").classList.remove("hidden");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+</script>
 {% endblock %}

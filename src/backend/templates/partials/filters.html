@@ -47,13 +47,10 @@
     });
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Parse the query parameters from the URL
     const params = new URLSearchParams(window.location.search);
     
-    // Get the 'combined_filters' parameter
     const combinedFilters = params.get('combined_filters');
     
-    // If 'combined_filters' exists, set it as the input's value
     if (combinedFilters) {
       document.getElementById('combined_filters_input').value = combinedFilters;
     }
