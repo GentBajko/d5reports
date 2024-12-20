@@ -1,39 +1,27 @@
 <div class="mb-4 flex justify-between items-center gap-4">
   <form method="get" class="flex items-center gap-2">
     <!-- Single Combined Filter/Search Input -->
-    <input
-      type="text"
-      name="combined_filters"
-      id="combined_filters_input"
-      placeholder="e.g. Date>20-12-2024,Date<24-12-2024,Hours Worked>=7,Task Name has Test"
-      value=""
-      class="px-4 py-2 border rounded-lg w-[40rem]"
-    />
+    <input type="text" name="combined_filters" id="combined_filters_input"
+      placeholder="e.g. Date>20-12-2024,Date<24-12-2024,Hours Worked>=7,Task Name has Test" value=""
+      class="px-4 py-2 border rounded-lg w-[40rem]" />
 
     <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
       Apply
     </button>
   </form>
 
-
   <!-- Export form -->
   {% if show_export %}
-  <form
-    id="csv"
-    method="get"
-    action="{{ export_action }}"
-    class="flex items-center hidden"
-  >
-    <label for="start_date" class="mr-2">Start Date:</label>
-    <input type="date" name="start_date" required class="mr-4" />
-    <label for="end_date" class="mr-2">End Date:</label>
-    <input type="date" name="end_date" required class="mr-4" />
+  <form id="csv" method="get" action="{{ export_action }}" class="flex items-center hidden">
+    <input type="hidden" name="combined_filters" id="export_combined_filters" value="" />
+
     <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
       Export
     </button>
   </form>
   {% endif %}
 </div>
+
 <script>
   fetch("/user/is_admin")
     .then((response) => response.json())
@@ -46,13 +34,26 @@
       console.error("Error:", error);
     });
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const params = new URLSearchParams(window.location.search);
-    
+
     const combinedFilters = params.get('combined_filters');
-    
+
     if (combinedFilters) {
       document.getElementById('combined_filters_input').value = combinedFilters;
+
+      const exportCombinedFilters = document.getElementById('export_combined_filters');
+      if (exportCombinedFilters) {
+        exportCombinedFilters.value = combinedFilters;
+      }
+    }
+  });
+
+  // Optional: Update the export form's hidden input whenever the main filter changes
+  document.getElementById('combined_filters_input').addEventListener('input', function () {
+    const exportCombinedFilters = document.getElementById('export_combined_filters');
+    if (exportCombinedFilters) {
+      exportCombinedFilters.value = this.value;
     }
   });
 </script>

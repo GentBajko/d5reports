@@ -89,8 +89,7 @@ async def create_log_endpoint(
 @log_router.get("/export", response_class=StreamingResponse)
 def export_tasks_csv(
     request: Request,
-    start_date: str,
-    end_date: str,
+    combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -100,14 +99,26 @@ def export_tasks_csv(
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
     try:
-        start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
-        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+        filter_mapping = {
+            "Date": "timestamp",
+            "Task Name": "task_name",
+            "Hours Worked": "hours_spent_today",
+            "User": "user_name",
+            "Description": "description",
+            "Task Status": "task_status",
+        }
         pagination = Pagination(limit=None, current_page=1, order_by=[])
+        filters = get_filters(
+            combined_filters,
+            filter_mapping,
+            "Task Name",
+            date_fields=["Date"],
+        )
+
         logs, _ = get_all_logs(
             session,
             pagination,
-            timestamp__gte=int(start_datetime.timestamp()),
-            timestamp__lte=int(end_datetime.timestamp()),
+            **filters,
         )
         csv_file = StringIO()
         writer = csv.writer(csv_file)

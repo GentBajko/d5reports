@@ -31,8 +31,8 @@ from backend.dependencies.auth import (
     get_current_user,
 )
 from backend.models.pagination import Pagination
-from backend.utils.filters_and_sort import get_filters, get_sorting
 from database.interfaces.session import ISession
+from backend.utils.filters_and_sort import get_filters, get_sorting
 
 task_router = APIRouter(prefix="/task")
 
@@ -112,8 +112,7 @@ def get_project_options(
 @task_router.get("/export", response_class=StreamingResponse)
 def export_tasks_csv(
     request: Request,
-    start_date: str,
-    end_date: str,
+    combined_filters: Optional[str] = Query(None),
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -123,15 +122,25 @@ def export_tasks_csv(
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
     try:
-        start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
-        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+        filter_mapping = {
+            "Title": "title",
+            "Project": "project_name",
+            "Hours Required": "hours_required",
+            "Hours Worked": "hours_worked",
+            "Status": "status",
+            "Date": "timestamp",
+            "Last Updated": "last_updated",
+            "User": "user_name",
+        }
         pagination = Pagination(limit=None, current_page=1, order_by=[])
-        tasks, _ = get_all_tasks(
-            session,
-            pagination,
-            timestamp__gte=int(start_datetime.timestamp()),
-            timestamp__lte=int(end_datetime.timestamp()),
+        filters = get_filters(
+            combined_filters,
+            filter_mapping,
+            "Title",
+            date_fields=["Date", "Last Updated"],
         )
+
+        tasks, _ = get_all_tasks(session, pagination, **filters)
         csv_file = StringIO()
         writer = csv.writer(csv_file)
         writer.writerow(
@@ -247,7 +256,12 @@ def get_all_tasks_endpoint(
         "User": "user_name",
     }
 
-    filters = get_filters(combined_filters, filter_mapping, "Title", date_fields=["Date", "Last Updated"])
+    filters = get_filters(
+        combined_filters,
+        filter_mapping,
+        "Title",
+        date_fields=["Date", "Last Updated"],
+    )
 
     if is_admin(current_user):
         tasks, pagination = get_all_tasks(session, pagination, **filters)
