@@ -29,9 +29,10 @@
     {% for row in data %}
     <tr class="{% if loop.index is even %}bg-gray-50{% endif %} hover:bg-gray-100">
       {% for field in headers %}
-      <td class="w-1/{{ headers|length }} text-center py-3 px-4">
-        {{ render_cell(row, field) }}
-      </td>
+        <td
+          class="w-1/{{ headers|length }} text-center py-3 px-4 truncate overflow-hidden text-ellipsis whitespace-nowrap max-w-xs">
+          {{ render_cell(row, field) }}
+        </td>
       {% endfor %}
     </tr>
     {% endfor %}
