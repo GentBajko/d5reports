@@ -210,9 +210,6 @@ async def update_log_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    if not is_admin(current_user):
-        raise HTTPException(status_code=403, detail="Access forbidden")
-
     log_update = LogCreateModel(
         id=log_id,
         user_id=current_user.id,
