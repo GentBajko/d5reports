@@ -67,8 +67,8 @@ class Task:
         return ULID.from_str(self.project_id)
 
     @property
-    def _status(self) -> TaskStatus:
-        return TaskStatus(self.status)
+    def _status(self) -> Optional[TaskStatus]:
+        return TaskStatus(self.status) if self.status else None
 
     @property
     def _timestamp(self) -> datetime:

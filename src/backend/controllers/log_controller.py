@@ -82,6 +82,7 @@ async def create_log_endpoint(
     try:
         create_log(log_data, session)
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse(f"/log/{log_id}", status_code=303)
 
@@ -155,7 +156,7 @@ def export_tasks_csv(
         )
         return response
     except Exception as e:
-        logger.error(f"Error exporting tasks: {e}")
+        logger.exception(e)
         raise HTTPException(status_code=500, detail="Error exporting tasks")
 
 
