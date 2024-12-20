@@ -17,7 +17,9 @@
     </div>
   <p><strong>ID:</strong> {{ task.id }}</p>
   <p><strong>Title:</strong> {{ task.title }}</p>
-  <p><strong>Description:</strong> {{ task.description }}</p>
+  <p><strong>Description:</strong>
+  <p class="whitespace-pre-line break-words">{{ log.description }}</p>
+  </p>
   <p><strong>Project ID:</strong> {{ task.project_id }}</p>
   <p><strong>Project Name:</strong> {{ task.project_name }}</p>
   <p><strong>User ID:</strong> {{ task.user_id }}</p>

@@ -17,6 +17,7 @@
         {{ macros.render_status(log.task_status) }}
     </p>
     <p><strong>Created At: </strong> {{ log.created_at }}</p>
-    <p><strong>Description:</strong> {{ log.description }}</p>
+    <p><strong>Description:</strong></p>
+    <p class="whitespace-pre-line break-words">{{ log.description }}</p>
 </div>
 {% endblock %}
