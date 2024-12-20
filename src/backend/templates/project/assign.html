@@ -13,7 +13,7 @@
                 name="user_id" 
                 class="w-full border p-2" 
                 required
-                hx-get="/user/options"
+                hx-get="/user/{{ project.id }}/options"
                 hx-trigger="load"
                 hx-target="this"
                 hx-swap="innerHTML"

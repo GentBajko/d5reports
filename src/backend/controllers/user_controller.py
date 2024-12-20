@@ -11,6 +11,7 @@ from backend.models import (
     UserCreateModel,
     UserResponseModel,
 )
+from backend.views.project_view import get_project
 from core.models.log import Log
 from database.models import (
     user_mapper,  # noqa F401
@@ -113,9 +114,10 @@ async def logout(
     return RedirectResponse(url="/user/login", status_code=302)
 
 
-@user_router.get("/options", response_class=HTMLResponse)
+@user_router.get("/{project_id}/options", response_class=HTMLResponse)
 def get_user_options(
     request: Request,
+    project_id: str,
     page: int = 1,
     limit: int = 300,
     session: ISession = Depends(get_session),
@@ -125,7 +127,10 @@ def get_user_options(
 
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
+    project = get_project(session, id=project_id)
     users, pagination = get_all_users(session, pagination)
+    
+    users = [user for user in users if user not in project.developers]
 
     html_options = [
         f'<option value="{user.id}">{user.full_name}</option>'
