@@ -183,9 +183,6 @@ def update_project_page(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    if not is_admin(current_user):
-        raise HTTPException(status_code=403, detail="Access forbidden")
-
     log = get_log(session, id=log_id)
 
     if not log:
