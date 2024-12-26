@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}Office Days{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-lg mx-auto p-4">
+    <div class="flex justify-between items-center mb-4">
+        <button id="prev-button" class="p-2 rounded hover:bg-gray-200">&lt;</button>
+        <h1 class="text-3xl font-semibold">
+            {{ current_month_name }} {{ current_year }}
+        </h1>
+        <button id="next-button" class="p-2 rounded hover:bg-gray-200">&gt;</button>
+    </div>
+
+    <div class="grid grid-cols-7 gap-2 mb-2 text-center text-gray-600 font-medium">
+        {% for day in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] %}
+        <div>{{ day }}</div>
+        {% endfor %}
+    </div>
+
+    <div id="calendar" class="grid grid-cols-7 gap-2">
+        {% for day_obj in days %}
+        {% set day = day_obj.day_number %}
+        {% set day_name = day_obj.day_name %}
+        <div class="relative border rounded p-2 cursor-pointer day-cell
+                {% if day_obj.is_selected %}bg-blue-100 border-blue-500{% else %}hover:bg-gray-100{% endif %}
+                {% if day_name in ['Saturday', 'Sunday'] %}bg-gray-200 cursor-default pointer-events-none{% endif %}"
+            data-date="{{ day_obj.date_iso }}">
+            <span class="block text-sm text-gray-700">{{ day }}</span>
+            <span class="block text-xs text-gray-500">{{ day_name }}</span>
+            {% if day_obj.has_event %}
+            <div class="absolute bottom-1 left-1 right-1 h-1 bg-blue-500 rounded-full"></div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <form id="remote-days-form" method="post" action="" class="mt-4">
+        <input type="hidden" name="selected_dates" id="selected-dates-input" value="">
+        <button id="save-button"
+            class="bg-[#0e5c6a] hover:opacity-80 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+            type="submit" disabled>
+            Save
+        </button>
+    </form>
+</div>
+
+<script>
+    const calendar = document.getElementById('calendar');
+    const saveButton = document.getElementById('save-button');
+    const selectedDatesInput = document.getElementById('selected-dates-input');
+
+    let selectedDates = Array.from(document.querySelectorAll('.day-cell.bg-blue-100'))
+        .map(cell => cell.getAttribute('data-date'));
+
+    saveButton.disabled = selectedDates.length === 0;
+    selectedDatesInput.value = JSON.stringify(selectedDates);
+
+    calendar.addEventListener('click', function (e) {
+        if (e.target && e.target.closest('.day-cell')) {
+            const dayCell = e.target.closest('.day-cell');
+            const dateStr = dayCell.getAttribute('data-date');
+
+            if (selectedDates.includes(dateStr)) {
+                selectedDates = selectedDates.filter(d => d !== dateStr);
+                dayCell.classList.remove('bg-blue-100', 'border-blue-500');
+                dayCell.classList.add('hover:bg-gray-100');
+            } else {
+                selectedDates.push(dateStr);
+                dayCell.classList.add('bg-blue-100', 'border-blue-500');
+                dayCell.classList.remove('hover:bg-gray-100');
+            }
+
+            saveButton.disabled = selectedDates.length === 0;
+            selectedDatesInput.value = JSON.stringify(selectedDates);
+        }
+    });
+
+    document.getElementById('prev-button').addEventListener('click', function () {
+        let currentYear = parseInt("{{ current_year }}");
+        let currentMonth = parseInt("{{ current_month }}") - 1;
+        if (currentMonth < 1) {
+            currentMonth = 12;
+            currentYear -= 1;
+        }
+        window.location.href = `/calendar/{{ user_id }}?year=${currentYear}&month=${currentMonth}`;
+    });
+
+    document.getElementById('next-button').addEventListener('click', function () {
+        let currentYear = parseInt("{{ current_year }}");
+        let currentMonth = parseInt("{{ current_month }}") + 1;
+        if (currentMonth > 12) {
+            currentMonth = 1;
+            currentYear += 1;
+        }
+        window.location.href = `/calendar/{{ user_id }}?year=${currentYear}&month=${currentMonth}`;
+    });
+</script>
+{% endblock %}

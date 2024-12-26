@@ -1,4 +1,4 @@
-from typing import Any, List, Type, Generic, TypeVar, Optional, Protocol
+from typing import Any, Dict, List, Type, Generic, TypeVar, Optional, Protocol
 
 T = TypeVar("T")
 
@@ -22,7 +22,8 @@ class ISession(Protocol, Generic[T]):
         order_by: Optional[List[Any]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-        *args,
+        options: Optional[List[Any]] = None,
+        in_: Optional[Dict[Any, List[Any]]] = None,
         **filters,
     ) -> List[T]: ...
 

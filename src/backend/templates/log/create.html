@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Create Log{% endblock %}
 
@@ -48,7 +49,7 @@
             <label class="block text-gray-700">Description</label>
             <textarea name="description" class="w-full border p-2 h-32" required></textarea>
         </div>
-        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create Log</button>
+        {{ macros.button("Create Log") }}
     </form>
 </div>
 <script>

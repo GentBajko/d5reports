@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Create User{% endblock %}
 
@@ -27,7 +28,7 @@
                 <option value="1920">Developer</option>
             </select>
         </div>
-        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create User</button>
+        {{ macros.button("Create User") }}
     </form>
 </div>
 {% endblock %}

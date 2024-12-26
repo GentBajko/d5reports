@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Remove User from Project{% endblock %}
 
@@ -17,7 +18,7 @@
                 {{ options | safe }}
             </select>
         </div>
-        <button type="submit" class="bg-red-500 text-white px-4 py-2">Remove User</button>
+        {{ macros.button("Remove User") }}
     </form>
 </div>
 

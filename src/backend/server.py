@@ -18,6 +18,7 @@ from backend.controllers.user_controller import user_router
 from backend.controllers.project_controller import project_router
 from backend.controllers.dashboard_controller import dashboard_router
 from backend.controllers.healthcheck_controller import healthcheck_router
+from backend.controllers.calendar_controller import calendar_router
 
 scheduler = AsyncIOScheduler()
 
@@ -114,3 +115,4 @@ app.include_router(project_router, tags=["Project"])
 app.include_router(task_router, tags=["Task"])
 app.include_router(log_router, tags=["Log"])
 app.include_router(dashboard_router, tags=["Dashboard"])
+app.include_router(calendar_router, tags=["Calendar"])

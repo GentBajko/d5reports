@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Assign Project to User{% endblock %}
 
@@ -22,7 +23,7 @@
             </select>
             <div class="htmx-indicator">Loading...</div>
         </div>
-        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Assign User</button>
+        {{ macros.button("Assign User") }}
     </form>
 </div>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Create Project{% endblock %}
 
@@ -20,7 +21,7 @@
             <input type="hidden" name="send_email" value="False">
             <input type="checkbox" id="send_email" name="send_email" value="True" class="border p-2">
         </div>
-        <button type="submit" class="bg-[#0e5c6a] text-white px-4 py-2">Create Project</button>
+        {{ macros.button("Create Project") }}
     </form>
 </div>
 

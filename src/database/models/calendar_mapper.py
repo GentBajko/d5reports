@@ -1,8 +1,7 @@
-from sqlalchemy import Date, Table, Column, String, ForeignKey
+from sqlalchemy import Boolean, Date, Table, Column, String, ForeignKey
 
-from core.models.remote import RemoteDay
+from core.models.office_calendar import OfficeCalendar
 from database.models.mapper import mapper_registry
-
 
 remote_day_table = Table(
     "remote_days",
@@ -10,6 +9,7 @@ remote_day_table = Table(
     Column("id", String(26), primary_key=True),
     Column("user_id", String(26), ForeignKey("user.id"), nullable=False),
     Column("day", Date, nullable=False),
+    Column("present", Boolean, nullable=True, default=False),
 )
 
-mapper_registry.map_imperatively(RemoteDay, remote_day_table)
+mapper_registry.map_imperatively(OfficeCalendar, remote_day_table)

@@ -94,3 +94,47 @@
     </svg>
   </a>
 {% endmacro %}
+
+{% macro button(text, id="save-button", disabled=False, debounce_duration=300) %}
+<button id="{{ id }}"
+  class="bg-[#002F41] hover:opacity-80 text-white font-bold py-2 px-4 rounded {{ 'disabled:opacity-50 cursor-not-allowed' if disabled else 'cursor-pointer' }}"
+  type="button" {% if disabled %} disabled {% endif %} data-debounce-duration="{{ debounce_duration }}">
+  {{ text }}
+</button>
+
+<script>
+  // Debounce function to limit the rate at which a function can fire.
+  function debounce(func, delay) {
+    let timeoutId;
+    return function (...args) {
+      if (timeoutId) return; // If debounce is active, do nothing
+      func.apply(this, args);
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+      }, delay);
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("{{ id }}");
+    if (!button) return;
+
+    const debounceDuration = parseInt(button.getAttribute('data-debounce-duration'), 10) || 300;
+    const handleClick = (event) => {
+      button.disabled = true;
+      button.classList.add('opacity-50');
+
+      const form = button.closest('form');
+      if (form) {
+        form.submit();
+      } else {
+        console.warn("No parent form found for the button with id '{{ id }}'.");
+      }
+    };
+
+    const debouncedClick = debounce(handleClick, debounceDuration);
+
+    button.addEventListener("click", debouncedClick);
+  });
+</script>
+{% endmacro %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Edit Project{% endblock %}
 
@@ -68,7 +69,7 @@
             >
         </div>
 
-        <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded-sm">Update Project</button>
+        {{ macros.button("Update Project") }}
     </form>
 
     <div id="project-details">

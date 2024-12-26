@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% block title %}Edit Log{% endblock %}
 
@@ -66,7 +67,7 @@
             </select>
         </div>
         
-        <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded-sm">Update Log</button>
+        {{ macros.button("Update Log") }}
     </form>
     {% else %}
     <p>You can no longer edit this log.</p>

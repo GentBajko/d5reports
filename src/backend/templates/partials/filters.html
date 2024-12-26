@@ -1,3 +1,5 @@
+{% import "macros.html" as macros %}
+
 <div class="mb-4 flex justify-between items-center gap-4">
   <form method="get" class="flex items-center gap-2">
     <!-- Single Combined Filter/Search Input -->
@@ -5,9 +7,7 @@
       placeholder="e.g. Date>20-12-2024,Date<24-12-2024,Hours Worked>=7,Task Name has Test" value=""
       class="px-4 py-2 border rounded-lg w-[40rem]" />
 
-    <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
-      Apply
-    </button>
+  {{ macros.button("Apply", id="apply_button") }}
   </form>
 
   <!-- Export form -->
@@ -15,9 +15,7 @@
   <form id="csv" method="get" action="{{ export_action }}" class="flex items-center hidden">
     <input type="hidden" name="combined_filters" id="export_combined_filters" value="" />
 
-    <button type="submit" class="bg-[#002F41] text-white px-4 py-2 rounded">
-      Export
-    </button>
+    {{ macros.button("Export", id="export_button") }}
   </form>
   {% endif %}
 </div>
