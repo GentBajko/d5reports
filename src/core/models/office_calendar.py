@@ -10,7 +10,7 @@ class OfficeCalendar:
         day: str
         present: bool
 
-    def __init__(self, user_id: str, day):
+    def __init__(self, user_id: str, day, present=False):
         self.id = str(ULID())
         self.user_id = user_id
         self.day = day
@@ -29,4 +29,5 @@ class OfficeCalendar:
             "id": self.id,
             "user_id": self.user_id,
             "day": self.day,
+            "present": self.present
         }

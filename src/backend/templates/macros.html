@@ -97,7 +97,7 @@
 
 {% macro button(text, id="save-button", disabled=False, debounce_duration=300) %}
 <button id="{{ id }}"
-  class="bg-[#002F41] hover:opacity-80 text-white font-bold py-2 px-4 rounded {{ 'disabled:opacity-50 cursor-not-allowed' if disabled else 'cursor-pointer' }}"
+  class="bg-[#002F41] hover:opacity-80 text-white font-bold py-2 px-4 rounded-lg {{ 'disabled:opacity-50 cursor-not-allowed' if disabled else 'cursor-pointer' }}"
   type="button" {% if disabled %} disabled {% endif %} data-debounce-duration="{{ debounce_duration }}">
   {{ text }}
 </button>

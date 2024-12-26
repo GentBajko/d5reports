@@ -1,6 +1,4 @@
-import os
 import json
-import shutil
 from typing import Set, Dict, List, Union, Optional
 import calendar
 from datetime import date, datetime
@@ -43,32 +41,40 @@ async def upload_xlsx(
     file: UploadFile = File(...),
     parser: IFileParser = Depends(FileParser),
     current_user: User = Depends(get_current_user),
+    session: ISession = Depends(get_session),
 ):
     """
-    Accepts an XLSX file upload and extracts attendance data.
+    Accepts an XLSX file upload, extracts attendance data in-memory, and updates the database.
+    If the user dates match, sets OfficeCalendar.present to True.
     """
     if not is_admin(current_user):
-        return RedirectResponse(url=f"/{current_user.id}", status_code=302)
+        return RedirectResponse(url=f"/calendar/{current_user.id}", status_code=302)
 
-    # Save the uploaded file to a temporary location
-    temp_dir = "/tmp/calendar_uploads"
-    os.makedirs(temp_dir, exist_ok=True)
-    temp_file_path = os.path.join(
-        temp_dir, f"{datetime.utcnow().timestamp()}_{file.filename}"
-    )
+    file_ext = file.filename.split(".")[-1] if file.filename else ""
+    file_content = await file.read()
+    data = parser.parse_bytes(file_content, file_ext)
 
-    with open(temp_file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    # Parse the XLSX file
-    data = parser.parse_file(temp_file_path)
-
-    # Clean up the temporary file
-    os.remove(temp_file_path)
-
-    # Update the in-memory attendance data store
     for day_key, names in data.items():
-        attendance_data_store[day_key] = names
+        try:
+            day_date = datetime.strptime(day_key, "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        for full_name in names:
+            user_record = session.query(User, full_name=full_name)
+            if user_record:
+                office_calendar = (
+                    session.query(
+                        OfficeCalendar, day=day_date, user_id=user_record[0].id
+                    )  # noqa E501
+                )
+                if not office_calendar:
+                    office_calendar = OfficeCalendar(
+                        user_id=user_record[0].id, day=day_date, present=True
+                    )
+                    session.add(office_calendar)
+                else:
+                    office_calendar[0].present = True
+    session.commit()
 
     return RedirectResponse(url="/calendar", status_code=302)
 
@@ -78,14 +84,14 @@ def get_all_remote(
     request: Request,
     year: Optional[int] = Query(None, description="Year for the calendar"),
     month: Optional[int] = Query(None, description="Month for the calendar"),
-    session: "ISession" = Depends(get_session),
+    session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> Union[HTMLResponse, RedirectResponse]:
     """
-    Returns a calendar view displaying remote days, with color-coded attendance from XLSX.
+    Returns a calendar view displaying days, highlighting users' presence with color coding.
     """
     if not is_admin(current_user):
-        return RedirectResponse(url=f"/{current_user.id}", status_code=302)
+        return RedirectResponse(url=f"/calendar/{current_user.id}", status_code=302)
 
     today = date.today()
     used_year = year if year else today.year
@@ -94,48 +100,37 @@ def get_all_remote(
     if not 1 <= used_month <= 12:
         raise HTTPException(status_code=400, detail="Invalid month value")
 
-    # Calculate first and last day of the month
     first_day = date(used_year, used_month, 1)
     last_day = date(
         used_year, used_month, calendar.monthrange(used_year, used_month)[1]
     )
 
-    # Fetch all users
     all_users: List[User] = session.query(User)
-
-    # Fetch all remote days within the specified month
     remote_days: List[OfficeCalendar] = session.query(
-        OfficeCalendar, day__gte=first_day, day__lte=last_day
+        OfficeCalendar,
+        day__gte=first_day,
+        day__lte=last_day,
     )
 
-    # Map user IDs to full names
     user_dict: Dict[str, str] = {user.id: user.full_name for user in all_users}
 
-    # Map dates to list of user full names
-    remote_days_by_date: Dict[date, List[str]] = {}
+    presence_by_date: Dict[date, Dict[str, bool]] = {}
     for rd in remote_days:
-        if rd.day not in remote_days_by_date:
-            remote_days_by_date[rd.day] = []  # type: ignore
+        if rd.day not in presence_by_date:
+            presence_by_date[rd.day] = {}  # type: ignore
         user_full_name = user_dict.get(rd.user_id, "Unknown User")
-        remote_days_by_date[rd.day].append(user_full_name)  # type: ignore
+        presence_by_date[rd.day][user_full_name] = rd.present  # type: ignore
 
-    # Generate calendar days
     days_list = []
     cal = calendar.Calendar()
     for day_date in cal.itermonthdates(used_year, used_month):
         if day_date.month != used_month:
-            continue  # Skip days from adjacent months
-        remote_users = remote_days_by_date.get(day_date, [])
-        color_coded_users = []
+            continue
         date_key = day_date.isoformat()
-        for user_full_name in remote_users:
-            if (
-                date_key in attendance_data_store
-                and user_full_name in attendance_data_store[date_key]
-            ):
-                color_class = "text-green-500"
-            else:
-                color_class = "text-red-500"
+        user_presence_map = presence_by_date.get(day_date, {})
+        color_coded_users = []
+        for user_full_name, present_val in user_presence_map.items():
+            color_class = "text-green-500" if present_val else "text-red-500"
             color_coded_users.append(
                 {"name": user_full_name, "color_class": color_class}
             )
@@ -144,11 +139,10 @@ def get_all_remote(
             "day_name": day_date.strftime("%A"),
             "date_iso": date_key,
             "users": color_coded_users,
-            "is_weekend": day_date.weekday() >= 5,  # Saturday=5, Sunday=6
+            "is_weekend": day_date.weekday() >= 5,
         }
         days_list.append(day_obj)
 
-    # Get the month's name
     month_name = datetime(used_year, used_month, 1).strftime("%B")
 
     return templates.TemplateResponse(
@@ -161,7 +155,6 @@ def get_all_remote(
             "current_year": used_year,
         },
     )
-
 
 @calendar_router.get("/{user_id}", response_class=HTMLResponse)
 def get_user_remote(
@@ -177,25 +170,20 @@ def get_user_remote(
     """
     if current_user.id != user_id and not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
-
     today = date.today()
     used_year = year if year else today.year
     used_month = month if month else today.month
-
     first_day = date(used_year, used_month, 1)
     last_day = date(
         used_year, used_month, calendar.monthrange(used_year, used_month)[1]
     )
-
     remote_days = session.query(
         OfficeCalendar,
         user_id=user_id,
         day__gte=first_day,
         day__lte=last_day,
     )
-
     selected_dates = set(rd.day for rd in remote_days)
-
     days_list = []
     cal = calendar.Calendar()
     for day_date in cal.itermonthdates(used_year, used_month):
@@ -209,9 +197,7 @@ def get_user_remote(
             "has_event": day_date in selected_dates,
         }
         days_list.append(day_obj)
-
     month_name = datetime(used_year, used_month, 1).strftime("%B")
-
     return templates.TemplateResponse(
         "calendar/user.html",
         {
@@ -223,7 +209,6 @@ def get_user_remote(
             "current_year": used_year,
         },
     )
-
 
 @calendar_router.post("/{user_id}", response_class=HTMLResponse)
 def post_user_remote(
@@ -240,7 +225,6 @@ def post_user_remote(
     """
     if current_user.id != user_id and not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access forbidden")
-
     try:
         selected_date_list = json.loads(selected_dates)
         selected_date_set = set(
@@ -250,16 +234,13 @@ def post_user_remote(
         raise HTTPException(
             status_code=400, detail="Invalid date format"
         ) from e
-
     today = date.today()
     used_year = year if year else today.year
     used_month = month if month else today.month
-
     first_day = date(used_year, used_month, 1)
     last_day = date(
         used_year, used_month, calendar.monthrange(used_year, used_month)[1]
     )
-
     existing_remote_days = session.query(
         OfficeCalendar,
         user_id=user_id,
@@ -267,15 +248,14 @@ def post_user_remote(
         day__lte=last_day,
     )
     existing_dates = set(rd.day for rd in existing_remote_days)
-
     dates_to_add = selected_date_set - existing_dates
     dates_to_remove = existing_dates - selected_date_set
-
     for day in dates_to_add:
         rd = OfficeCalendar(user_id=user_id, day=day)
         session.add(rd)
-
-    if is_admin(current_user) and dates_to_remove:
+    if not is_admin(current_user):
+        dates_to_remove = {d for d in dates_to_remove if d >= today}
+    if dates_to_remove:
         to_remove = session.query(
             OfficeCalendar,
             user_id=user_id,
@@ -283,10 +263,8 @@ def post_user_remote(
         )
         for rd in to_remove:
             session.delete(rd)
-
     session.commit()
-
     return RedirectResponse(
-        url=f"/user/{user_id}/remote?year={used_year}&month={used_month}",
+        url=f"/calendar/{user_id}?year={used_year}&month={used_month}",
         status_code=302,
     )

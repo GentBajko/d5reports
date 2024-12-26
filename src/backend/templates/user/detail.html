@@ -4,19 +4,26 @@
 {% block title %}User Detail{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-8 shadow-md">
+<div class="max-w-2xl mx-auto bg-white p-8 shadow-md relative">
+    <div class="absolute top-4 right-4">
+        <a href="/calendar/{{ user.id }}" class="text-sm text-[#0e5c6a] hover:underline"
+            title="View User's Office Days">
+            Calendar
+        </a>
+    </div>
     <h1 class="text-2xl mb-4">User Detail</h1>
     <p><strong>ID:</strong> {{ user.id }}</p>
     <p><strong>Email:</strong> {{ user.email }}</p>
     <p><strong>Full Name:</strong> {{ user.full_name }}</p>
-    <p><strong>Permissions:</strong> 
-    {% if user.permissions == 127 %}
+    <p><strong>Permissions:</strong>
+        {% if user.permissions == 127 %}
         Admin
-    {% else %}
+        {% else %}
         Developer
-    {% endif %}
+        {% endif %}
     </p>
-    <p><strong>Projects: </strong> {{ macros.length_link(user.projects, '/user/' ~ user.id ~ '/projects', 'Project', 'Projects') }}</p>
+    <p><strong>Projects: </strong> {{ macros.length_link(user.projects, '/user/' ~ user.id ~ '/projects', 'Project',
+        'Projects') }}</p>
     <p><strong>Tasks: </strong> {{ macros.length_link(user.tasks, '/user/' ~ user.id ~ '/tasks', 'Task', 'Tasks') }}</p>
 </div>
 {% endblock %}
