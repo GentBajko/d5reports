@@ -14,6 +14,16 @@
         <button id="next-button" class="p-2 rounded hover:bg-gray-200">&gt;</button>
     </div>
 
+    <!-- XLSX Upload Form -->
+    <form action="/calendar/upload_xlsx" method="post" enctype="multipart/form-data" class="mb-6">
+        <label for="file" class="block mb-2 text-sm font-medium text-gray-700">Upload XLS/XLSX</label>
+        <input id="file" name="file" type="file" accept=".xlsx,.xls" required
+            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer focus:ring-blue-500 focus:border-blue-500">
+        <button type="submit" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+            Upload
+        </button>
+    </form>
+
     <!-- Days of the Week -->
     <div class="grid grid-cols-7 gap-2 mb-2 text-center text-gray-600 font-medium">
         {% for day in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] %}
@@ -36,22 +46,10 @@
             </div>
             <!-- Users List -->
             {% if day_obj.users %}
-            <ul class="mt-2 text-xs text-blue-600 space-y-1">
-                {% for user in day_obj.users[:4] %}
-                <li>{{ user }}</li>
+            <ul class="mt-2 text-xs space-y-1">
+                {% for user_item in day_obj.users %}
+                <li class="{{ user_item.color_class }}">{{ user_item.name }}</li>
                 {% endfor %}
-                {% if day_obj.users|length > 4 %}
-                <li class="extra-users hidden">
-                    {% for user in day_obj.users[4:] %}
-                    {{ user }}<br>
-                    {% endfor %}
-                </li>
-                <li>
-                    <button class="toggle-button text-blue-500 underline text-xs">
-                        Show more
-                    </button>
-                </li>
-                {% endif %}
             </ul>
             {% else %}
             <p class="mt-2 text-xs text-gray-400">No Office Days</p>
@@ -61,26 +59,9 @@
     </div>
 </div>
 
-<!-- Optional: JavaScript for Expand/Collapse Functionality -->
+<!-- JavaScript for Navigation -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const toggleButtons = document.querySelectorAll('.toggle-button');
-
-        toggleButtons.forEach(button => {
-            button.addEventListener('click', function (e) {
-                const parentLi = e.target.parentElement;
-                const extraUsers = parentLi.previousElementSibling;
-
-                if (extraUsers.classList.contains('hidden')) {
-                    extraUsers.classList.remove('hidden');
-                    e.target.textContent = 'Show less';
-                } else {
-                    extraUsers.classList.add('hidden');
-                    e.target.textContent = 'Show more';
-                }
-            });
-        });
-
         // Navigation Buttons
         document.getElementById('prev-button').addEventListener('click', function () {
             let currentYear = parseInt("{{ current_year }}");

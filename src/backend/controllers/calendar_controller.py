@@ -1,9 +1,20 @@
+import os
 import json
-from typing import Dict, List, Union, Optional
+import shutil
+from typing import Set, Dict, List, Union, Optional
 import calendar
 from datetime import date, datetime
 
-from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
+from fastapi import (
+    File,
+    Form,
+    Query,
+    Depends,
+    Request,
+    APIRouter,
+    UploadFile,
+    HTTPException,
+)
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from database.models import (
@@ -12,41 +23,74 @@ from database.models import (
 )
 from core.models.user import User
 from backend.dependencies import get_session
+from database.models.mapper import mapper_registry  # noqa F401
 from backend.utils.templates import templates
 from backend.dependencies.auth import (
     is_admin,
     get_current_user,
 )
+from backend.utils.xlsx_parser import FileParser, IFileParser
 from core.models.office_calendar import OfficeCalendar
 from database.interfaces.session import ISession
 
 calendar_router = APIRouter(prefix="/calendar")
 
-@calendar_router.get(
-    "/",
-    response_class=HTMLResponse,
-    response_model=None,
-)
+attendance_data_store: Dict[str, Set[str]] = {}
+
+
+@calendar_router.post("/upload_xlsx", response_class=RedirectResponse)
+async def upload_xlsx(
+    file: UploadFile = File(...),
+    parser: IFileParser = Depends(FileParser),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Accepts an XLSX file upload and extracts attendance data.
+    """
+    if not is_admin(current_user):
+        return RedirectResponse(url=f"/{current_user.id}", status_code=302)
+
+    # Save the uploaded file to a temporary location
+    temp_dir = "/tmp/calendar_uploads"
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_file_path = os.path.join(
+        temp_dir, f"{datetime.utcnow().timestamp()}_{file.filename}"
+    )
+
+    with open(temp_file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Parse the XLSX file
+    data = parser.parse_file(temp_file_path)
+
+    # Clean up the temporary file
+    os.remove(temp_file_path)
+
+    # Update the in-memory attendance data store
+    for day_key, names in data.items():
+        attendance_data_store[day_key] = names
+
+    return RedirectResponse(url="/calendar", status_code=302)
+
+
+@calendar_router.get("/", response_class=HTMLResponse, response_model=None)
 def get_all_remote(
     request: Request,
     year: Optional[int] = Query(None, description="Year for the calendar"),
     month: Optional[int] = Query(None, description="Month for the calendar"),
-    session: ISession = Depends(get_session),
+    session: "ISession" = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> Union[HTMLResponse, RedirectResponse]:
     """
-    Returns a calendar view displaying all users' remote days for the given year and month.
+    Returns a calendar view displaying remote days, with color-coded attendance from XLSX.
     """
-    # Access Control: Only admins can access this view
     if not is_admin(current_user):
         return RedirectResponse(url=f"/{current_user.id}", status_code=302)
 
-    # Determine the target year and month
     today = date.today()
     used_year = year if year else today.year
     used_month = month if month else today.month
 
-    # Validate month
     if not 1 <= used_month <= 12:
         raise HTTPException(status_code=400, detail="Invalid month value")
 
@@ -64,12 +108,11 @@ def get_all_remote(
         OfficeCalendar, day__gte=first_day, day__lte=last_day
     )
 
+    # Map user IDs to full names
+    user_dict: Dict[str, str] = {user.id: user.full_name for user in all_users}
+
     # Map dates to list of user full names
     remote_days_by_date: Dict[date, List[str]] = {}
-    user_dict: Dict[str, str] = {
-        user.id: user.full_name for user in all_users
-    }  # Assuming User.id is str
-
     for rd in remote_days:
         if rd.day not in remote_days_by_date:
             remote_days_by_date[rd.day] = []  # type: ignore
@@ -82,12 +125,25 @@ def get_all_remote(
     for day_date in cal.itermonthdates(used_year, used_month):
         if day_date.month != used_month:
             continue  # Skip days from adjacent months
-        users = remote_days_by_date.get(day_date, [])
+        remote_users = remote_days_by_date.get(day_date, [])
+        color_coded_users = []
+        date_key = day_date.isoformat()
+        for user_full_name in remote_users:
+            if (
+                date_key in attendance_data_store
+                and user_full_name in attendance_data_store[date_key]
+            ):
+                color_class = "text-green-500"
+            else:
+                color_class = "text-red-500"
+            color_coded_users.append(
+                {"name": user_full_name, "color_class": color_class}
+            )
         day_obj = {
             "day_number": day_date.day,
             "day_name": day_date.strftime("%A"),
-            "date_iso": day_date.isoformat(),
-            "users": users,  # List of user full names
+            "date_iso": date_key,
+            "users": color_coded_users,
             "is_weekend": day_date.weekday() >= 5,  # Saturday=5, Sunday=6
         }
         days_list.append(day_obj)
