@@ -186,15 +186,27 @@ def get_user_remote(
     selected_dates = set(rd.day for rd in remote_days)
     days_list = []
     cal = calendar.Calendar()
+    cal_data = {rd.day: rd for rd in remote_days}
     for day_date in cal.itermonthdates(used_year, used_month):
         if day_date.month != used_month:
             continue
+        existing_record = cal_data.get(day_date)
+        color_class = ""
+        if existing_record:
+            if day_date >= today:
+                color_class = "blue"
+            else:
+                if existing_record.present:
+                    color_class = "green"
+                else:
+                    color_class = "red"
         day_obj = {
             "day_number": day_date.day,
             "day_name": day_date.strftime("%A"),
             "date_iso": day_date.isoformat(),
             "is_selected": day_date in selected_dates,
             "has_event": day_date in selected_dates,
+            "color_class": color_class,
         }
         days_list.append(day_obj)
     month_name = datetime(used_year, used_month, 1).strftime("%B")
@@ -223,8 +235,10 @@ def post_user_remote(
     """
     Saves and removes user remote days for a given year and month.
     """
-    if current_user.id != user_id and not is_admin(current_user):
-        raise HTTPException(status_code=403, detail="Access forbidden")
+    if current_user.id != user_id:
+        if not is_admin(current_user):
+            raise HTTPException(status_code=403, detail="Access forbidden")
+        
     try:
         selected_date_list = json.loads(selected_dates)
         selected_date_set = set(
