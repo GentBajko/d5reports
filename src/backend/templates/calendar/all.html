@@ -20,8 +20,7 @@
         <div class="relative">
             <input id="file" name="file" type="file" accept=".xlsx,.xls" required
                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-            <button type="button"
-                class="bg-[#002F41] hover:opacity-80 text-white font-bold py-2 px-4 rounded-lg">
+            <button type="button" class="bg-[#002F41] hover:opacity-80 text-white font-bold py-2 px-4 rounded-lg">
                 Upload XLS/XLSX
             </button>
         </div>
@@ -41,7 +40,7 @@
         {% set day = day_obj.day_number %}
         {% set day_name = day_obj.day_name %}
         <div class="relative border rounded p-2 
-                {% if day_obj.is_weekend %}bg-gray-200{% else %}hover:bg-gray-100{% endif %}"
+                {% if day_obj.is_weekend %}bg-gray-200{% else %}hover:bg-gray-100{% endif %} cursor-pointer"
             data-date="{{ day_obj.date_iso }}">
             <!-- Day Number and Name -->
             <div class="flex flex-col">
@@ -50,11 +49,23 @@
             </div>
             <!-- Users List -->
             {% if day_obj.users %}
+            {% if day_obj.users|length > 3 %}
+            <ul class="mt-2 text-xs space-y-1">
+                {% for user_item in day_obj.users[:3] %}
+                <li class="{{ user_item.color_class }}">{{ user_item.name }}</li>
+                {% endfor %}
+                <li class="text-blue-500 cursor-pointer" data-users='{{ day_obj.users | tojson | safe }}'
+                    onclick="openModal(this)">
+                    +{{ day_obj.users|length - 3 }} more
+                </li>
+            </ul>
+            {% else %}
             <ul class="mt-2 text-xs space-y-1">
                 {% for user_item in day_obj.users %}
                 <li class="{{ user_item.color_class }}">{{ user_item.name }}</li>
                 {% endfor %}
             </ul>
+            {% endif %}
             {% else %}
             <p class="mt-2 text-xs text-gray-400">No Office Days</p>
             {% endif %}
@@ -63,10 +74,22 @@
     </div>
 </div>
 
-<!-- JavaScript for Navigation -->
+<!-- Modal Structure -->
+<div id="userModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg w-80 p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Office Days</h2>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <ul id="modalUserList" class="space-y-2">
+            <!-- User items will be injected here -->
+        </ul>
+    </div>
+</div>
+
+<!-- JavaScript for Navigation and Modal -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Navigation Buttons
         document.getElementById('prev-button').addEventListener('click', function () {
             let currentYear = parseInt("{{ current_year }}");
             let currentMonth = parseInt("{{ current_month }}") - 1;
@@ -86,6 +109,54 @@
             }
             window.location.href = `/calendar?year=${currentYear}&month=${currentMonth}`;
         });
+    });
+
+    function openModal(element) {
+        const usersData = element.getAttribute('data-users');
+        if (!usersData) {
+            console.error('No users data found');
+            return;
+        }
+
+        let users;
+        try {
+            users = JSON.parse(usersData);
+        } catch (e) {
+            console.error('Error parsing users data:', e);
+            return;
+        }
+
+        const modal = document.getElementById('userModal');
+        const userList = document.getElementById('modalUserList');
+
+        userList.innerHTML = '';
+
+        users.forEach(user => {
+            const li = document.createElement('li');
+            li.textContent = user.name;
+            li.className = user.color_class;
+            userList.appendChild(li);
+        });
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('userModal');
+        modal.classList.add('hidden');
+    }
+
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('userModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
     });
 </script>
 {% endblock %}
