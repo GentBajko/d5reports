@@ -9,7 +9,6 @@ from fastapi import (
     APIRouter,
     HTTPException,
 )
-from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.models import (
@@ -298,19 +297,12 @@ def remove_user_from_project_page(
     """
     Endpoint to retrieve users associated with a specific project with pagination.
     """
-    order_by = []
-    if sort:
-        sort_column = getattr(User, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid sort field: {sort}"
-            )
+    sort_mapping = {
+        "Name": User.full_name,
+        "Email": User.email,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     users, pagination = get_user_by_project(session, project_id, pagination)
@@ -362,19 +354,12 @@ def get_user_by_project_endpoint(
     """
     Endpoint to retrieve users associated with a specific project with pagination.
     """
-    order_by = []
-    if sort:
-        sort_column = getattr(User, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid sort field: {sort}"
-            )
+    sort_mapping = {
+        "Name": User.full_name,
+        "Email": User.email,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     users, pagination = get_user_by_project(session, project_id, pagination)
@@ -405,19 +390,16 @@ def get_tasks_by_project_endpoint(
     """
     Endpoint to retrieve tasks associated with a specific project with pagination.
     """
-    order_by = []
-    if sort:
-        sort_column = getattr(Task, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid sort field: {sort}"
-            )
+    sort_mapping = {
+        "Title": Task.title,
+        "Hours Required": Task.hours_required,
+        "Hours Worked": Task.hours_worked,
+        "Status": Task.status,
+        "Date": Task.timestamp,
+        "Last Updated": Task.last_updated,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     tasks, pagination = get_project_tasks(session, project_id, pagination)

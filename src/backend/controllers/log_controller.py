@@ -258,7 +258,6 @@ def get_all_logs_endpoint(
     }
 
     order_by = get_sorting(sort, order, sort_mapping)
-
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     filter_mapping = {

@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import Form, Query, Depends, Request, APIRouter, HTTPException
-from sqlalchemy import asc, desc
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from backend.models import (
@@ -218,15 +217,14 @@ def get_user_projects_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-    if sort:
-        sort_column = getattr(Project, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
+    sort_mapping = {
+        "Name": Project.name,
+        "Email": Project.email,
+        "Send Email": Project.send_email,
+        "Archived": Project.archived,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     projects, pagination = get_project_by_user(session, user_id, pagination)
@@ -263,15 +261,16 @@ def get_user_tasks_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-    if sort:
-        sort_column = getattr(Task, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
+    sort_mapping = {
+        "Title": Task.title,
+        "Hours Required": Task.hours_required,
+        "Hours Worked": Task.hours_worked,
+        "Status": Task.status,
+        "Date": Task.timestamp,
+        "Last Updated": Task.last_updated,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     tasks, pagination = get_user_tasks(session, user_id, pagination)
@@ -311,19 +310,15 @@ def get_logs_by_user_endpoint(
     session: ISession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    order_by = []
-    if sort:
-        sort_column = getattr(Log, sort, None)
-        if sort_column:
-            if order and order.lower() == "desc":
-                order_by.append(desc(sort_column))
-            else:
-                order_by.append(asc(sort_column))
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid sort field: {sort}"
-            )
+    sort_mapping = {
+        "ID": Log.id,
+        "Task Name": Log.task_name,
+        "Hours ": Log.hours_spent_today,
+        "Task Status": Log.task_status,
+        "Date": Log.timestamp,
+    }
 
+    order_by = get_sorting(sort, order, sort_mapping)
     pagination = Pagination(limit=limit, current_page=page, order_by=order_by)
 
     if current_user.id != user_id and not is_admin(current_user):
